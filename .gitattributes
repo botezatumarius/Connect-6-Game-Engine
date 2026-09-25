@@ -1,0 +1,8 @@
+* text=auto
+
+# Prebuilt Cloudict engines must never be touched by line-ending conversion
+*.exe binary
+*.app binary
+*.linux binary
+*.gif binary
+*.png binary

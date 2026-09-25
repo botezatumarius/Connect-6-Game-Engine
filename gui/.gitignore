@@ -1,0 +1,14 @@
+
+*.log
+*.pyc
+*~
+.DS_Store
+*.swp
+
+
+engines/alumnos
+tournaments/1vs1/
+tournaments/todos/
+.csv
+tournaments/2024.txt
+tournaments/
