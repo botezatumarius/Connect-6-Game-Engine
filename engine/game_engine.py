@@ -12,7 +12,7 @@ class GameEngine:
                 self.m_engine_name = name
             else:
                 print(f"Too long Engine Name: {name}, should be less than: {Defines.MSG_LENGTH}")
-        self.m_alphabeta_depth = 6
+        self.m_alphabeta_depth = Defines.SEARCH_DEPTH
         self.m_board = t = [ [0]*Defines.GRID_NUM for i in range(Defines.GRID_NUM)]
         self.init_game()
         self.m_search_engine = SearchEngine()
@@ -107,7 +107,7 @@ class GameEngine:
 
         start = time.perf_counter()
         self.m_search_engine.before_search(self.m_board, self.m_chess_type, self.m_alphabeta_depth)
-        score = self.m_search_engine.alpha_beta_search(self.m_alphabeta_depth, Defines.MININT, Defines.MAXINT, ourColor, bestMove, bestMove)
+        score = self.m_search_engine.minimax_search(bestMove)
         end = time.perf_counter()
 
         print(f"AB Time:\t{end - start:.3f}")

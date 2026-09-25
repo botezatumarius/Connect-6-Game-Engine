@@ -14,6 +14,7 @@ class Defines:
     WIN_LENGTH=6      # Stones in a row needed to win.
     CANDIDATE_RADIUS=2       # Max distance from a stone for a candidate cell.
     MAX_CANDIDATE_CELLS=10   # Candidate cells kept; they form at most 45 two-stone moves.
+    SEARCH_DEPTH=2           # Plies explored by Minimax (our move + the reply).
     # Max values in the evaluation.
     MAXINT=20000
     MININT=-20000

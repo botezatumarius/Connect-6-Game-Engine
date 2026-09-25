@@ -1,4 +1,4 @@
-"""Connect6 game rules: end-of-game detection."""
+"""Connect6 game rules: turn order and end-of-game detection."""
 from enum import IntEnum
 
 from defines import Defines
@@ -14,6 +14,10 @@ class GameResult(IntEnum):
     BLACK_WIN = Defines.BLACK
     WHITE_WIN = Defines.WHITE
     DRAW = 3
+
+
+def opponent(color):
+    return Defines.BLACK + Defines.WHITE - color
 
 
 def count_run(board, x, y, dx, dy, color):
