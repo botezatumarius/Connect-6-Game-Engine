@@ -10,6 +10,7 @@ class Defines:
     GRID_COUNT=361 #Sum of the points in the board.
     LOG_FILE="tia-engine.log"
     ENGINE_NAME="TIA.Connect6"
+    PLAYABLE=range(1, GRID_NUM - 1)  # Board indices inside the border.
     WIN_LENGTH=6      # Stones in a row needed to win.
     CANDIDATE_RADIUS=2       # Max distance from a stone for a candidate cell.
     MAX_CANDIDATE_CELLS=10   # Candidate cells kept; they form at most 45 two-stone moves.

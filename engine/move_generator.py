@@ -3,7 +3,7 @@ from itertools import combinations
 
 from defines import Defines, StoneMove, StonePosition
 
-PLAYABLE = range(1, Defines.GRID_NUM - 1)
+PLAYABLE = Defines.PLAYABLE
 CENTRE = (Defines.GRID_NUM // 2, Defines.GRID_NUM // 2)
 
 
