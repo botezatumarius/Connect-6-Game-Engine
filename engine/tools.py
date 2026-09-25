@@ -20,34 +20,6 @@ def unmake_move(board, move):
     board[move.positions[0].x][move.positions[0].y] = Defines.NOSTONE
     board[move.positions[1].x][move.positions[1].y] = Defines.NOSTONE
 
-def is_win_by_premove(board, preMove):
-    directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
-
-    for direction in directions:
-        for i in range(len(preMove.positions)):
-            count = 0
-            position = preMove.positions[i]
-            n = x = position.x
-            m = y = position.y
-            movStone = board[n][m]
-            
-            if (movStone == Defines.BORDER or movStone == Defines.NOSTONE):
-                return False;
-                
-            while board[x][y] == movStone:
-                x += direction[0]
-                y += direction[1]
-                count += 1
-            x = n - direction[0]
-            y = m - direction[1]
-            while board[x][y] == movStone:
-                x -= direction[0]
-                y -= direction[1]
-                count += 1
-            if count >= 6:
-                return True
-    return False
-
 def get_msg(max_len):
     buf = input().strip()
     return buf[:max_len]

@@ -1,4 +1,5 @@
 from tools import *
+from rules import is_win_by_premove
 
 class SearchEngine():
     def __init__(self):

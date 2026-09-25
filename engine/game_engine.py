@@ -1,5 +1,6 @@
 from defines import *
 from tools import *
+from rules import is_win_by_premove
 import sys
 from search_engine import SearchEngine
 import time

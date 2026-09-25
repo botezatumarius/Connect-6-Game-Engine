@@ -10,6 +10,7 @@ class Defines:
     GRID_COUNT=361 #Sum of the points in the board.
     LOG_FILE="tia-engine.log"
     ENGINE_NAME="TIA.Connect6"
+    WIN_LENGTH=6      # Stones in a row needed to win.
     # Max values in the evaluation.
     MAXINT=20000
     MININT=-20000
