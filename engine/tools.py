@@ -1,96 +1,59 @@
-from defines import *
 import time
 
-# Point (x, y) if in the valid position of the board.
-def isValidPos(x,y):
-    return x>0 and x<Defines.GRID_NUM-1 and y>0 and y<Defines.GRID_NUM-1
-    
+from defines import Defines, StoneMove
+
+SYMBOLS = {Defines.NOSTONE: "-", Defines.BLACK: "X", Defines.WHITE: "O"}
+
+
 def init_board(board):
-    for i in range(21):
-        board[i][0] = board[0][i] = board[i][Defines.GRID_NUM - 1] = board[Defines.GRID_NUM - 1][i] = Defines.BORDER
-    for i in range(1, Defines.GRID_NUM - 1):
-        for j in range(1, Defines.GRID_NUM - 1):
+    last = Defines.GRID_NUM - 1
+    for i in range(Defines.GRID_NUM):
+        board[i][0] = board[0][i] = board[i][last] = board[last][i] = Defines.BORDER
+    for i in Defines.PLAYABLE:
+        for j in Defines.PLAYABLE:
             board[i][j] = Defines.NOSTONE
-            
+
+
 def make_move(board, move, color):
     board[move.positions[0].x][move.positions[0].y] = color
     board[move.positions[1].x][move.positions[1].y] = color
+
 
 def unmake_move(board, move):
     board[move.positions[0].x][move.positions[0].y] = Defines.NOSTONE
     board[move.positions[1].x][move.positions[1].y] = Defines.NOSTONE
 
-def get_msg(max_len):
-    buf = input().strip()
-    return buf[:max_len]
 
 def log_to_file(msg):
-    g_log_file_name = Defines.LOG_FILE
     try:
-        with open(g_log_file_name, "a") as file:
-            tm = time.time()
-            ptr = time.ctime(tm)
-            ptr = ptr[:-1]
-            file.write(f"[{ptr}] - {msg}\n")
-        return 0
-    except Exception as e:
-        print(f"Error: Can't open log file - {g_log_file_name}")
-        return -1
+        with open(Defines.LOG_FILE, "a") as file:
+            file.write(f"[{time.ctime()}] - {msg}\n")
+    except OSError:
+        pass
 
-def move2msg(move):
-    if move.positions[0].x == move.positions[1].x and move.positions[0].y == move.positions[1].y:
-        msg = f"{chr(ord('S') - move.positions[0].x + 1)}{chr(move.positions[0].y + ord('A') - 1)}"
-        return msg
-    else:
-        msg = f"{chr(move.positions[0].y + ord('A') - 1)}{chr(ord('S') - move.positions[0].x + 1)}" \
-              f"{chr(move.positions[1].y + ord('A') - 1)}{chr(ord('S') - move.positions[1].x + 1)}"
-        return msg
+
+# Coordinates use the GUI's letters A-S: the first letter is the row, the second the column.
+def cell_name(x, y):
+    return chr(ord("A") + x - 1) + chr(ord("A") + y - 1)
+
 
 def msg2move(msg):
+    """Parse 'XY' (one stone) or 'XYXY' (two stones)."""
     move = StoneMove()
-    if len(msg) == 2:
-        move.positions[0].x = move.positions[1].x = ord('S') - ord(msg[1]) + 1
-        move.positions[0].y = move.positions[1].y = ord(msg[0]) - ord('A') + 1
-        move.score = 0
-        return move
-    else:
-        move.positions[0].x = ord('S') - ord(msg[1]) + 1
-        move.positions[0].y = ord(msg[0]) - ord('A') + 1
-        move.positions[1].x = ord('S') - ord(msg[3]) + 1
-        move.positions[1].y = ord(msg[2]) - ord('A') + 1
-        move.score = 0
-        return move
+    cells = (msg[:2], msg[2:4] or msg[:2])
+    for position, (row, col) in zip(move.positions, cells):
+        position.x = ord(row) - ord("A") + 1
+        position.y = ord(col) - ord("A") + 1
+    return move
 
-def print_board(board, preMove=None):
-    print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
-    for i in range(1, Defines.GRID_NUM - 1):
-        print(f"{chr(ord('A') - 1 + i)}", end=" ")
-        for j in range(1, Defines.GRID_NUM - 1):
-            x = Defines.GRID_NUM - 1 - j
-            y = i
-            stone = board[x][y]
-            if stone == Defines.NOSTONE:
-                print(" -", end="")
-            elif stone == Defines.BLACK:
-                print(" O", end="")
-            elif stone == Defines.WHITE:
-                print(" *", end="")
-        print(" ", end="")        
-        print(f"{chr(ord('A') - 1 + i)}", end="\n")
-    print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
 
-def print_score(move_list, n):
-    board = [[0] * Defines.GRID_NUM for _ in range(Defines.GRID_NUM)]
-    for move in move_list:
-        board[move.x][move.y] = move.score
+def move2msg(move):
+    first, second = (cell_name(p.x, p.y) for p in move.positions)
+    return first if first == second else first + second
 
-    print("  " + "".join([f"{i:4}" for i in range(1, Defines.GRID_NUM - 1)]))
-    for i in range(1, Defines.GRID_NUM - 1):
-        print(f"{i:2}", end="")
-        for j in range(1, Defines.GRID_NUM - 1):
-            score = board[i][j]
-            if score == 0:
-                print("   -", end="")
-            else:
-                print(f"{score:4}", end="")
-        print()
+
+def print_board(board):
+    letters = [chr(ord("A") + i - 1) for i in Defines.PLAYABLE]
+    print("  " + " ".join(letters))
+    for x in Defines.PLAYABLE:
+        print(letters[x - 1], " ".join(SYMBOLS[board[x][y]] for y in Defines.PLAYABLE))

@@ -1,9 +1,9 @@
 from game_engine import GameEngine
-import sys
+
 
 def main():
-    gameEngine = GameEngine('TIA.Connect6')
-    gameEngine.run()
+    GameEngine().run()
+
 
 if __name__ == "__main__":
     main()
