@@ -1,6 +1,4 @@
-"""Naive adversarial search: fixed-depth Minimax (Black maximises, White minimises)."""
-from operator import itemgetter
-
+"""Fixed-depth Minimax with alpha-beta pruning (Black maximises, White minimises)."""
 from defines import Defines
 from evaluation import evaluate
 from move_generator import generate_moves
@@ -8,43 +6,50 @@ from rules import GameResult, get_game_result, opponent
 from tools import make_move, unmake_move
 
 
-def best_for(color):
-    """max for Black, min for White."""
-    return max if color == Defines.BLACK else min
-
-
 class SearchEngine():
     def __init__(self):
         self.m_board = None
         self.m_chess_type = None
         self.m_depth = None
+        self.m_best_move = None
         self.m_total_nodes = 0
+        self.m_pruned_nodes = 0
 
     def before_search(self, board, color, depth):
         self.m_board = [row[:] for row in board]
         self.m_chess_type = color
         self.m_depth = depth
         self.m_total_nodes = 0
+        self.m_pruned_nodes = 0
 
-    def minimax_search(self, bestMove):
+    def alpha_beta_search(self, bestMove):
         """Store our best move in `bestMove` and return its score."""
-        scored = [(self.score_move(move, self.m_depth, self.m_chess_type), move)
-                  for move in generate_moves(self.m_board)]
-        score, move = best_for(self.m_chess_type)(scored, key=itemgetter(0))
-        bestMove.positions = move.positions
+        score = self.alpha_beta(self.m_depth, Defines.MININT - 1, Defines.MAXINT + 1, self.m_chess_type, None)
+        bestMove.positions = self.m_best_move.positions
         return score
 
-    def score_move(self, move, depth, color):
-        """Minimax value of playing `move` for `color`."""
-        make_move(self.m_board, move, color)
-        score = self.minimax(depth - 1, opponent(color), move)
-        unmake_move(self.m_board, move)
-        return score
-
-    def minimax(self, depth, color, preMove):
-        """Minimax value of the position after `preMove`, with `color` to move."""
+    def alpha_beta(self, depth, alpha, beta, color, preMove, ply=0):
+        """Minimax value of the position after `preMove` within the (alpha, beta) window."""
         self.m_total_nodes += 1
-        if depth == 0 or get_game_result(self.m_board, preMove) != GameResult.ONGOING:
+        if ply and (depth == 0 or get_game_result(self.m_board, preMove) != GameResult.ONGOING):
             return evaluate(self.m_board, preMove)
-        return best_for(color)(self.score_move(move, depth, color)
-                               for move in generate_moves(self.m_board))
+
+        maximizing = color == Defines.BLACK
+        moves = generate_moves(self.m_board)
+        for i, move in enumerate(moves):
+            make_move(self.m_board, move, color)
+            score = self.alpha_beta(depth - 1, alpha, beta, opponent(color), move, ply + 1)
+            unmake_move(self.m_board, move)
+
+            if maximizing and score > alpha:
+                alpha = score
+            elif not maximizing and score < beta:
+                beta = score
+            else:
+                continue
+            if ply == 0:
+                self.m_best_move = move
+            if alpha >= beta:
+                self.m_pruned_nodes += len(moves) - i - 1
+                break
+        return alpha if maximizing else beta

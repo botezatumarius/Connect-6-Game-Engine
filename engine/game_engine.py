@@ -102,7 +102,8 @@ class GameEngine:
         start = time.perf_counter()
         best_move = StoneMove()
         self.m_search_engine.before_search(self.m_board, color, Defines.SEARCH_DEPTH)
-        score = self.m_search_engine.minimax_search(best_move)
+        score = self.m_search_engine.alpha_beta_search(best_move)
         elapsed = time.perf_counter() - start
-        print(f"info time {elapsed:.3f} nodes {self.m_search_engine.m_total_nodes} score {score}")
+        engine = self.m_search_engine
+        print(f"info time {elapsed:.3f} nodes {engine.m_total_nodes} pruned {engine.m_pruned_nodes} score {score}")
         return best_move
