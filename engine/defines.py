@@ -11,7 +11,6 @@ class Defines:
     WIN_LENGTH = 6                   # Stones in a row needed to win.
     MAXINT = 20000                   # Score of a won game.
     MININT = -20000                  # Score of a lost game.
-    CANDIDATE_RADIUS = 2             # Max distance from a stone for a candidate cell.
     MAX_CANDIDATE_CELLS = 10         # Candidate cells kept; they form at most 45 two-stone moves.
     SEARCH_DEPTH = 2                 # Plies explored by the search (our move + the reply).
     DEFAULT_TIME_LIMIT = 5.0         # Seconds per turn until a `depth` command sets it.

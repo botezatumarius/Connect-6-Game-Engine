@@ -1,46 +1,42 @@
-"""Naive move generation: proposes the candidate moves the search will explore."""
+"""Move generation: candidates around live stones, ranked by the severity of their threats."""
 from itertools import combinations
 
-from board import SIZE
+from board import SIZE, WINDOWS
 from defines import Defines
 
 CENTRE = (SIZE // 2) * SIZE + SIZE // 2
+# Priority of a window by its stones: each extra stone makes the threat four times more severe.
+SEVERITY = (0, 1, 4, 16, 64, 256, 1024)
 
 
-def build_neighbours(radius):
-    """For each cell, the cells within `radius` (Chebyshev distance) and their distance."""
-    neighbours = []
-    for row in range(SIZE):
-        for col in range(SIZE):
-            neighbours.append(tuple(
-                (r * SIZE + c, max(abs(r - row), abs(c - col)))
-                for r in range(max(0, row - radius), min(SIZE, row + radius + 1))
-                for c in range(max(0, col - radius), min(SIZE, col + radius + 1))
-                if (r, c) != (row, col)))
-    return tuple(neighbours)
+def rank_cells(board):
+    """Score every empty cell of a live window (stones of one colour only) by the windows through it.
 
-
-NEIGHBOURS = build_neighbours(Defines.CANDIDATE_RADIUS)
-
-
-def candidate_cells(board, limit):
-    """Return up to `limit` empty cells, nearest to the existing stones first."""
-    # Distance from each empty cell near a stone to its closest stone.
-    distance = {}
-    for cell, stone in enumerate(board.cells):
-        if stone:
-            for near, d in NEIGHBOURS[cell]:
-                if not board.cells[near] and d < distance.get(near, Defines.CANDIDATE_RADIUS + 1):
-                    distance[near] = d
-
-    # Almost full board: fall back to every empty cell so a move is always possible.
-    if len(distance) < 2:
-        return [cell for cell, stone in enumerate(board.cells) if not stone][:limit]
-    return sorted(distance, key=distance.get)[:limit]
+    Windows of either colour count, so a cell scores both its attack value (our windows)
+    and its defence value (the opponent's windows it would block).
+    """
+    black, white = board.counts[Defines.BLACK], board.counts[Defines.WHITE]
+    scores = {}
+    for window, cells in enumerate(WINDOWS):
+        b, w = black[window], white[window]
+        if (b == 0) == (w == 0):
+            continue  # Empty window, or dead because it holds both colours.
+        severity = SEVERITY[b or w]
+        for cell in cells:
+            if not board.cells[cell]:
+                scores[cell] = scores.get(cell, 0) + severity
+    return scores
 
 
 def generate_moves(board, limit=Defines.MAX_CANDIDATE_CELLS):
-    """Black opens with one stone in the centre; later moves are pairs of candidate cells."""
+    """Moves ordered from best to worst: pairs of the best cells, by their combined score."""
     if not board.stones:
-        return [(CENTRE,)]
-    return list(combinations(candidate_cells(board, limit), 2))
+        return [(CENTRE,)]  # Black's first move is a single stone.
+
+    scores = rank_cells(board)
+    if len(scores) < 2:
+        # No live window left: any empty cells will do.
+        scores = {cell: 0 for cell, stone in enumerate(board.cells) if not stone}
+    cells = sorted(scores, key=scores.get, reverse=True)[:limit]
+    pairs = combinations(cells, 2)
+    return sorted(pairs, key=lambda pair: scores[pair[0]] + scores[pair[1]], reverse=True)
