@@ -1,46 +1,43 @@
 """Fixed-depth Minimax with alpha-beta pruning (Black maximises, White minimises)."""
+from board import opponent
 from defines import Defines
 from evaluation import evaluate
 from move_generator import generate_moves
-from rules import GameResult, get_game_result, opponent
-from tools import make_move, unmake_move
 
 
 class SearchEngine():
+    """Searches the game tree on the game's board, playing and undoing moves in place."""
+
     def __init__(self):
         self.m_board = None
-        self.m_chess_type = None
-        self.m_depth = None
         self.m_best_move = None
+        self.m_total_nodes = 0   # Nodes expanded in the last search.
+        self.m_pruned_nodes = 0  # Sibling moves skipped by alpha-beta cut-offs.
+
+    def search(self, board, color, depth):
+        """Return the best move for `color` and its score. The board is restored afterwards."""
+        self.m_board = board
         self.m_total_nodes = 0
         self.m_pruned_nodes = 0
+        score = self.alpha_beta(depth, Defines.MININT - 1, Defines.MAXINT + 1, color)
+        return self.m_best_move, score
 
-    def before_search(self, board, color, depth):
-        self.m_board = [row[:] for row in board]
-        self.m_chess_type = color
-        self.m_depth = depth
-        self.m_total_nodes = 0
-        self.m_pruned_nodes = 0
-
-    def alpha_beta_search(self, bestMove):
-        """Store our best move in `bestMove` and return its score."""
-        score = self.alpha_beta(self.m_depth, Defines.MININT - 1, Defines.MAXINT + 1, self.m_chess_type, None)
-        bestMove.positions = self.m_best_move.positions
-        return score
-
-    def alpha_beta(self, depth, alpha, beta, color, preMove, ply=0):
-        """Minimax value of the position after `preMove` within the (alpha, beta) window."""
+    def alpha_beta(self, depth, alpha, beta, color, ply=0):
+        """Minimax value of the current position within the (alpha, beta) window."""
         self.m_total_nodes += 1
-        if ply and (depth == 0 or get_game_result(self.m_board, preMove) != GameResult.ONGOING):
-            return evaluate(self.m_board, preMove)
+        board = self.m_board
+        # Leaf: depth limit reached or game over (the root always searches).
+        if ply and (depth == 0 or board.winner or board.is_full()):
+            return evaluate(board)
 
         maximizing = color == Defines.BLACK
-        moves = generate_moves(self.m_board)
+        moves = generate_moves(board)
         for i, move in enumerate(moves):
-            make_move(self.m_board, move, color)
-            score = self.alpha_beta(depth - 1, alpha, beta, opponent(color), move, ply + 1)
-            unmake_move(self.m_board, move)
+            board.play(move, color)
+            score = self.alpha_beta(depth - 1, alpha, beta, opponent(color), ply + 1)
+            board.undo()
 
+            # MAX raises alpha, MIN lowers beta; other moves change nothing.
             if maximizing and score > alpha:
                 alpha = score
             elif not maximizing and score < beta:
@@ -49,6 +46,7 @@ class SearchEngine():
                 continue
             if ply == 0:
                 self.m_best_move = move
+            # Cut-off: the opponent will never allow this line, skip the remaining moves.
             if alpha >= beta:
                 self.m_pruned_nodes += len(moves) - i - 1
                 break
