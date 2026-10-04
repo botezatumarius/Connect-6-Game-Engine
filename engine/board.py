@@ -55,6 +55,22 @@ class Board:
         """True when no empty cell is left (the game is a draw if nobody has won)."""
         return self.stones == len(self.cells)
 
+    def blockers(self, color):
+        """Stones the opponent needs to kill every set `color` can complete next turn (max 3).
+
+        It is the smallest set of empty cells that hits every threat window of `color`.
+        """
+        gaps = [{cell for cell in WINDOWS[window] if not self.cells[cell]} for window in self.threats[color]]
+        if not gaps:
+            return 0
+        if set.intersection(*gaps):
+            return 1  # One cell lies in every threat window.
+        for cell in set.union(*gaps):
+            rest = [gap for gap in gaps if cell not in gap]
+            if set.intersection(*rest):
+                return 2  # This cell plus one more cover all the windows.
+        return 3  # A two-stone move cannot stop them all.
+
     def play(self, move, color):
         """Place the one or two stones of `move`."""
         for cell in move:

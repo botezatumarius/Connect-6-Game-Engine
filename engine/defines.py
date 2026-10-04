@@ -9,8 +9,9 @@ class Defines:
     BLACK = 1
     WHITE = 2
     WIN_LENGTH = 6                   # Stones in a row needed to win.
-    MAXINT = 20000                   # Score of a won game.
-    MININT = -20000                  # Score of a lost game.
+    MAXINT = 1000000                 # Score of a won game, above any heuristic score.
+    MININT = -1000000                # Score of a lost game.
+    SEVERITY = (0, 1, 4, 16, 64, 256, 1024)  # Weight of a live window by its stones.
     MAX_CANDIDATE_CELLS = 10         # Candidate cells kept; they form at most 45 two-stone moves.
     SEARCH_DEPTH = 2                 # Plies explored by the search (our move + the reply).
     DEFAULT_TIME_LIMIT = 5.0         # Seconds per turn until a `depth` command sets it.

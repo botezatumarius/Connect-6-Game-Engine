@@ -5,8 +5,6 @@ from board import SIZE, WINDOWS
 from defines import Defines
 
 CENTRE = (SIZE // 2) * SIZE + SIZE // 2
-# Priority of a window by its stones: each extra stone makes the threat four times more severe.
-SEVERITY = (0, 1, 4, 16, 64, 256, 1024)
 
 
 def rank_cells(board):
@@ -21,7 +19,7 @@ def rank_cells(board):
         b, w = black[window], white[window]
         if (b == 0) == (w == 0):
             continue  # Empty window, or dead because it holds both colours.
-        severity = SEVERITY[b or w]
+        severity = Defines.SEVERITY[b or w]  # Each extra stone makes the threat 4x more severe.
         for cell in cells:
             if not board.cells[cell]:
                 scores[cell] = scores.get(cell, 0) + severity
