@@ -31,7 +31,7 @@ class SearchEngine():
             return evaluate(board)
 
         maximizing = color == Defines.BLACK
-        moves = generate_moves(board)
+        moves = generate_moves(board, color)
         for i, move in enumerate(moves):
             board.play(move, color)
             score = self.alpha_beta(depth - 1, alpha, beta, opponent(color), ply + 1)
