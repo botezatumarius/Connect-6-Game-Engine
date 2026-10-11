@@ -28,7 +28,7 @@ class SearchEngine():
         board = self.m_board
         # Leaf: depth limit reached or game over (the root always searches).
         if ply and (depth == 0 or board.winner or board.is_full()):
-            return evaluate(board)
+            return evaluate(board, color)
 
         maximizing = color == Defines.BLACK
         moves = generate_moves(board, color)
