@@ -1,14 +1,15 @@
 """Fixed-depth Minimax with alpha-beta pruning (Black maximises, White minimises)."""
 from board import opponent
 from defines import Defines
-from evaluation import evaluate
+from evaluation import WEIGHTS, evaluate
 from move_generator import generate_moves
 
 
 class SearchEngine():
     """Searches the game tree on the game's board, playing and undoing moves in place."""
 
-    def __init__(self):
+    def __init__(self, weights=WEIGHTS):
+        self.m_weights = weights  # Evaluation weights (tuned by the genetic algorithm).
         self.m_board = None
         self.m_best_move = None
         self.m_total_nodes = 0   # Nodes expanded in the last search.
@@ -28,7 +29,7 @@ class SearchEngine():
         board = self.m_board
         # Leaf: depth limit reached or game over (the root always searches).
         if ply and (depth == 0 or board.winner or board.is_full()):
-            return evaluate(board, color)
+            return evaluate(board, color, self.m_weights)
 
         maximizing = color == Defines.BLACK
         moves = generate_moves(board, color)
