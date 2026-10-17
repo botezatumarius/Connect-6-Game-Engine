@@ -5,7 +5,7 @@ spread around the hand-tuned weights, and the fitness of each individual is the 
 it wins in games against other individuals of its generation. At the end, the best individuals
 are validated against the hand-tuned weights. Results are written to training/results/.
 
-Usage: python training/genetic.py [--generations 20] [--population 16] [--seed 1]
+Usage: python training/genetic.py [--generations 20] [--population 16] [--seed 1] [--progress]
 """
 import argparse
 import csv
@@ -22,7 +22,7 @@ sys.path.insert(0, str(ROOT / "engine"))
 
 from board import Board, SIZE, opponent  # noqa: E402
 from defines import Defines  # noqa: E402
-from evaluation import FEATURES, WEIGHTS  # noqa: E402
+from evaluation import FEATURES  # noqa: E402
 from search_engine import SearchEngine  # noqa: E402
 
 RESULTS = ROOT / "training" / "results"
@@ -35,6 +35,7 @@ MUTATION_RATE = 0.2  # Probability of mutating each gene.
 MUTATION_SIGMA = 0.25  # Relative size of a mutation (log-normal factor).
 INIT_SIGMA = 0.35   # Spread of the first population around the hand-tuned weights.
 VALIDATED = 3       # Best individuals of the last generation compared on validation games.
+HAND_TUNED = (1, 4, 16, -1, -4, -16, -128)  # Session 3 weights: starting point and yardstick.
 
 
 def cell(name):
@@ -120,7 +121,7 @@ def mutate(weights):
 def evolve(generations, size, pool, log_file):
     """Run the genetic algorithm and return the last generation, fittest first."""
     log = csv.writer(log_file)
-    population = [WEIGHTS] + [scaled(WEIGHTS, INIT_SIGMA) for _ in range(size - 1)]
+    population = [HAND_TUNED] + [scaled(HAND_TUNED, INIT_SIGMA) for _ in range(size - 1)]
     for generation in range(generations):
         start = time.perf_counter()
         scores = fitness(population, pool)
@@ -142,8 +143,8 @@ def evolve(generations, size, pool, log_file):
 
 def validate(candidates, pool):
     """Score each candidate against the hand-tuned weights on every opening, with both colours."""
-    pairings = [(i, -1, weights, WEIGHTS, opening) for i, weights in enumerate(candidates) for opening in OPENINGS]
-    pairings += [(-1, i, WEIGHTS, weights, opening) for i, weights in enumerate(candidates) for opening in OPENINGS]
+    pairings = [(i, -1, weights, HAND_TUNED, opening) for i, weights in enumerate(candidates) for opening in OPENINGS]
+    pairings += [(-1, i, HAND_TUNED, weights, opening) for i, weights in enumerate(candidates) for opening in OPENINGS]
     points = [0] * len(candidates)
     for black, white, winner in pool.imap_unordered(play_pairing, pairings):
         candidate = max(black, white)  # The hand-tuned side has index -1.
@@ -154,13 +155,36 @@ def validate(candidates, pool):
     return [p / (4 * len(OPENINGS)) for p in points]
 
 
+def progress(pool):
+    """Score the best individual of every generation against the hand-tuned weights.
+
+    Fitness inside a generation is relative (individuals only meet each other), so this replays
+    each generation's best on the validation games to measure the progress in absolute terms.
+    """
+    with open(RESULTS / "evolution.csv", newline="") as file:
+        rows = list(csv.DictReader(file))
+    champions = [tuple(float(row[feature]) for feature in FEATURES) for row in rows]
+    scores = validate(champions, pool)
+    with open(RESULTS / "progress.csv", "w", newline="") as file:
+        log = csv.writer(file)
+        log.writerow(["generation", "score_vs_hand_tuned"])
+        for row, score in zip(rows, scores):
+            log.writerow([row["generation"], f"{score:.3f}"])
+            print(f"generation {row['generation']}: {score:.3f} against the hand-tuned weights")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--generations", type=int, default=20)
     parser.add_argument("--population", type=int, default=16)
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--progress", action="store_true", help="only measure each generation's best")
     args = parser.parse_args()
     random.seed(args.seed)
+    if args.progress:
+        with Pool() as pool:
+            progress(pool)
+        return
 
     RESULTS.mkdir(parents=True, exist_ok=True)
     with open(RESULTS / "evolution.csv", "w", newline="") as file, Pool() as pool:

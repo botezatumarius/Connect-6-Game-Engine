@@ -10,7 +10,9 @@ from defines import Defines
 #   opp_1..opp_3  the opponent's live sets holding 1, 2 or 3 stones
 #   opp_blockers  stones we must spend to stop the opponent's threats (1 or 2)
 FEATURES = ("own_1", "own_2", "own_3", "opp_1", "opp_2", "opp_3", "opp_blockers")
-WEIGHTS = (1, 4, 16, -1, -4, -16, -128)  # Hand-tuned in session 3.
+# Evolved by the genetic algorithm of session 4 (training/genetic.py); the hand-tuned weights of
+# session 3 were (1, 4, 16, -1, -4, -16, -128).
+WEIGHTS = (1.12, 6.97, 22.74, -2.49, -6.25, -20.6, -60.5)
 
 
 def features(board, color):
