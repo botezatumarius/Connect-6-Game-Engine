@@ -13,6 +13,8 @@ class Defines:
     MININT = -1000000                # Score of a lost game.
     SEVERITY = (0, 1, 4, 16, 64, 256, 1024)  # Weight of a live window by its stones.
     MAX_CANDIDATE_CELLS = 10         # Candidate cells kept; they form at most 45 two-stone moves.
-    SEARCH_DEPTH = 2                 # Plies explored by the search (our move + the reply).
+    MAX_DEPTH = 8                    # Deepest iteration of the iterative deepening search.
+    TIME_SAFETY = 0.8                # Share of the time limit the search may use.
+    NEXT_ITERATION = 0.25            # No new iteration once this share of the limit is spent.
     DEFAULT_TIME_LIMIT = 5.0         # Seconds per turn until a `depth` command sets it.
     MAX_TIME_LIMIT = 25.0            # The GUI forfeits a move that takes over 30 s.

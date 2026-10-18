@@ -113,10 +113,11 @@ class GameEngine:
         self.m_to_move = opponent(color)
 
     def search_a_move(self, color):
-        """Run the search and print its statistics (time, nodes, pruned nodes, score)."""
+        """Search within the time limit and print the statistics (time, depth, nodes, pruned, score)."""
         start = time.perf_counter()
-        best_move, score = self.m_search_engine.search(self.m_board, color, Defines.SEARCH_DEPTH)
-        elapsed = time.perf_counter() - start
         engine = self.m_search_engine
-        print(f"info time {elapsed:.3f} nodes {engine.m_total_nodes} pruned {engine.m_pruned_nodes} score {score}")
+        best_move, score = engine.search(self.m_board, color, Defines.MAX_DEPTH, self.m_time_limit)
+        elapsed = time.perf_counter() - start
+        print(f"info time {elapsed:.3f} depth {engine.m_depth} nodes {engine.m_total_nodes} "
+              f"pruned {engine.m_pruned_nodes} score {score}")
         return best_move

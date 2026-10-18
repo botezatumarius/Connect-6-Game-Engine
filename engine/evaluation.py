@@ -1,7 +1,4 @@
-"""Evaluation function: a weighted sum of position features, seen by the side to move.
-
-The score is returned from Black's point of view, as the Minimax search expects.
-"""
+"""Evaluation function: a weighted sum of position features, seen by the side to move."""
 from board import opponent
 from defines import Defines
 
@@ -22,19 +19,18 @@ def features(board, color):
 
 
 def evaluate(board, color, weights=WEIGHTS):
-    """Score of the position with `color` to move, from Black's point of view."""
-    # Finished game: MAX for a black win, 0 for a draw, MIN for a white win.
+    """Score of the position for `color`, the side to move (negamax convention)."""
+    # Finished game: MAX if `color` has won, 0 for a draw, MIN if it has lost.
     if board.winner:
-        return Defines.MAXINT if board.winner == Defines.BLACK else Defines.MININT
+        return Defines.MAXINT if board.winner == color else Defines.MININT
     if board.is_full():
         return 0
 
-    sign = 1 if color == Defines.BLACK else -1
     # Imminent results, just below a finished game: the side to move completes a threat,
     # or cannot block the opponent's threats with its two stones.
     if board.threats[color]:
-        return sign * (Defines.MAXINT - 1)
+        return Defines.MAXINT - 1
     if board.blockers(opponent(color)) >= 3:
-        return -sign * (Defines.MAXINT - 2)
+        return Defines.MININT + 2
 
-    return sign * sum(w * f for w, f in zip(weights, features(board, color)))
+    return sum(w * f for w, f in zip(weights, features(board, color)))
