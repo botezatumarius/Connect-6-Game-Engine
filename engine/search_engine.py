@@ -1,4 +1,7 @@
-"""Alpha-beta search in negamax form, deepened iteratively until the time for the move runs out."""
+"""Alpha-beta search in negamax form, deepened iteratively until the time for the move runs out.
+
+Below the root only the N best moves are searched (forward pruning, N-best selective search).
+"""
 import time
 
 from board import opponent
@@ -17,8 +20,9 @@ class SearchTimeout(Exception):
 class SearchEngine():
     """Searches the game tree on the game's board, playing and undoing moves in place."""
 
-    def __init__(self, weights=WEIGHTS):
-        self.m_weights = weights
+    def __init__(self, weights=WEIGHTS, branching=Defines.BRANCHING):
+        self.m_weights = weights      # Evaluation weights (tuned by the genetic algorithm).
+        self.m_branching = branching  # Moves searched below the root (N-best forward pruning).
         self.m_board = None
         self.m_deadline = None
         self.m_best_move = None
@@ -56,7 +60,9 @@ class SearchEngine():
             return self.evaluate(color, ply)
 
         best = -INFINITY
-        moves = generate_moves(board, color)
+        moves = generate_moves(board, color, self.m_weights)
+        if ply:
+            moves = moves[:self.m_branching]  # Forward pruning: the root keeps every candidate.
         for i, move in enumerate(moves):
             board.play(move, color)
             try:

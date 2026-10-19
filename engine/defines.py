@@ -12,7 +12,8 @@ class Defines:
     MAXINT = 1000000                 # Score of a won game, above any heuristic score.
     MININT = -1000000                # Score of a lost game.
     SEVERITY = (0, 1, 4, 16, 64, 256, 1024)  # Weight of a live window by its stones.
-    MAX_CANDIDATE_CELLS = 10         # Candidate cells kept; they form at most 45 two-stone moves.
+    MAX_CANDIDATE_CELLS = 12         # Candidate cells kept; they form at most 66 two-stone moves.
+    BRANCHING = 10                   # Moves searched below the root (N-best forward pruning).
     MAX_DEPTH = 8                    # Deepest iteration of the iterative deepening search.
     TIME_SAFETY = 0.8                # Share of the time limit the search may use.
     NEXT_ITERATION = 0.25            # No new iteration once this share of the limit is spent.

@@ -1,8 +1,13 @@
-"""Move generation: winning moves, defences against imminent threats, then ranked candidates."""
+"""Move generation: winning moves, defences against imminent threats, then ranked candidates.
+
+Moves are ranked by the static evaluation of the position they lead to, so the search can keep
+only the N best (forward pruning, session 4).
+"""
 from itertools import chain, combinations
 
 from board import SIZE, WINDOWS, opponent
 from defines import Defines
+from evaluation import WEIGHTS, evaluate
 
 CENTRE = (SIZE // 2) * SIZE + SIZE // 2
 
@@ -46,22 +51,22 @@ def winning_move(board, color, cells):
     return tuple(gap)
 
 
-def rank_moves(board, color, moves, scores):
-    """Order moves by the strength of the threats they create, then by their cell scores.
+def rank_moves(board, color, moves, scores, weights):
+    """Order moves from best to worst by the static evaluation of the position they lead to.
 
-    The strength is the number of stones the opponent needs to stop our sets of 4+ stones,
-    then how many such sets the move creates.
+    The evaluation includes the threats a move creates (the opponent's blockers, or a win when
+    it cannot block them all); ties are broken by the cell scores.
     """
-    def strength(move):
+    def value(move):
         board.play(move, color)
-        key = (board.blockers(color), len(board.threats[color]))
+        score = -evaluate(board, opponent(color), weights)  # Our view of the opponent's position.
         board.undo()
-        return key + (sum(scores.get(cell, 0) for cell in move),)
+        return score, sum(scores.get(cell, 0) for cell in move)
 
-    return sorted(moves, key=strength, reverse=True)
+    return sorted(moves, key=value, reverse=True)
 
 
-def generate_moves(board, color, limit=Defines.MAX_CANDIDATE_CELLS):
+def generate_moves(board, color, weights=WEIGHTS, limit=Defines.MAX_CANDIDATE_CELLS):
     """Moves for `color` ordered from best to worst."""
     if not board.stones:
         return [(CENTRE,)]  # Black's first move is a single stone.
@@ -77,7 +82,7 @@ def generate_moves(board, color, limit=Defines.MAX_CANDIDATE_CELLS):
         candidates = set().union(*gaps, cells)
         moves = [move for move in combinations(candidates, 2) if all(gap & set(move) for gap in gaps)]
         # Three or more blockers are needed: the game is lost, block what we can.
-        return rank_moves(board, color, moves or list(combinations(candidates, 2)), scores)
+        return rank_moves(board, color, moves or list(combinations(candidates, 2)), scores, weights)
 
-    # 3. Pairs of the best cells, moves that create the strongest threats first.
-    return rank_moves(board, color, combinations(cells, 2), scores)
+    # 3. Pairs of the best cells, ranked by the evaluation of the resulting position.
+    return rank_moves(board, color, combinations(cells, 2), scores, weights)

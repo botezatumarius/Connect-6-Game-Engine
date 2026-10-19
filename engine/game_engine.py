@@ -119,5 +119,5 @@ class GameEngine:
         best_move, score = engine.search(self.m_board, color, Defines.MAX_DEPTH, self.m_time_limit)
         elapsed = time.perf_counter() - start
         print(f"info time {elapsed:.3f} depth {engine.m_depth} nodes {engine.m_total_nodes} "
-              f"pruned {engine.m_pruned_nodes} score {score}")
+              f"pruned {engine.m_pruned_nodes} score {score:.1f}")
         return best_move
