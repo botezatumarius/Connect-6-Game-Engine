@@ -1,4 +1,6 @@
 """Connect6 board that keeps, for every window of six cells, the stones each colour has in it."""
+import random
+
 from defines import Defines
 
 SIZE = Defines.BOARD_SIZE
@@ -35,6 +37,9 @@ def build_cell_windows():
 
 WINDOWS = build_windows()
 CELL_WINDOWS = build_cell_windows()
+# Zobrist keys: a random 64-bit number per colour and cell (fixed seed, so hashes are reproducible).
+_random = random.Random(6)
+ZOBRIST = (None, *(tuple(_random.getrandbits(64) for _ in range(SIZE * SIZE)) for _ in range(2)))
 
 
 class Board:
@@ -43,6 +48,7 @@ class Board:
     def __init__(self):
         self.cells = [Defines.NOSTONE] * (SIZE * SIZE)  # Cell index = row * SIZE + col.
         self.stones = 0
+        self.hash = 0  # Zobrist hash: XOR of the keys of every stone.
         self.winner = Defines.NOSTONE
         self.history = []  # (move, colour) pairs, so moves can be undone.
         # Indexed by colour: stones in each window, live windows (no opponent stone) by
@@ -87,42 +93,48 @@ class Board:
     def put(self, cell, color):
         """Place one stone and update the statistics of the windows through it."""
         other = opponent(color)
+        # Local names: this loop is the hottest code of the engine.
         mine, theirs = self.counts[color], self.counts[other]
+        my_lines, their_lines = self.lines[color], self.lines[other]
         self.cells[cell] = color
         self.stones += 1
+        self.hash ^= ZOBRIST[color][cell]
         for window in CELL_WINDOWS[cell]:
             n, m = mine[window], theirs[window]
             mine[window] = n + 1
             if m == 0:
                 # Our live window grows from n to n + 1 stones (index 0 is unused).
-                self.lines[color][n] -= 1
-                self.lines[color][n + 1] += 1
+                my_lines[n] -= 1
+                my_lines[n + 1] += 1
                 if n + 1 >= THREAT:
                     self.threats[color].add(window)
                     if n + 1 == WIN:
                         self.winner = color
             elif n == 0:
                 # The opponent's live window now holds our stone: it is dead.
-                self.lines[other][m] -= 1
-                self.threats[other].discard(window)
+                their_lines[m] -= 1
+                if m >= THREAT:
+                    self.threats[other].discard(window)
 
     def remove(self, cell, color):
         """Remove one stone, reverting exactly what put() did."""
         other = opponent(color)
         mine, theirs = self.counts[color], self.counts[other]
+        my_lines, their_lines = self.lines[color], self.lines[other]
         self.cells[cell] = Defines.NOSTONE
         self.stones -= 1
+        self.hash ^= ZOBRIST[color][cell]
         for window in CELL_WINDOWS[cell]:
             n, m = mine[window], theirs[window]
             mine[window] = n - 1
             if m == 0:
                 # Our live window shrinks from n to n - 1 stones.
-                self.lines[color][n] -= 1
-                self.lines[color][n - 1] += 1
+                my_lines[n] -= 1
+                my_lines[n - 1] += 1
                 if n == THREAT:
                     self.threats[color].discard(window)
             elif n == 1:
                 # Our only stone leaves the window: it is live again for the opponent.
-                self.lines[other][m] += 1
+                their_lines[m] += 1
                 if m >= THREAT:
                     self.threats[other].add(window)

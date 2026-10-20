@@ -15,6 +15,7 @@ class Defines:
     MAX_CANDIDATE_CELLS = 12         # Candidate cells kept; they form at most 66 two-stone moves.
     BRANCHING = 10                   # Moves searched below the root (N-best forward pruning).
     MAX_DEPTH = 8                    # Deepest iteration of the iterative deepening search.
+    TABLE_SIZE = 200000              # Max transposition table entries (bounds the memory used).
     TIME_SAFETY = 0.8                # Share of the time limit the search may use.
     NEXT_ITERATION = 0.25            # No new iteration once this share of the limit is spent.
     DEFAULT_TIME_LIMIT = 5.0         # Seconds per turn until a `depth` command sets it.
