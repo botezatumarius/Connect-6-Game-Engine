@@ -1,7 +1,8 @@
 """Alpha-beta search in negamax form, deepened iteratively until the time for the move runs out.
 
-Below the root only the N best moves are searched (forward pruning, N-best selective search), and
-a transposition table keyed by Zobrist hashes stores the result of every searched position.
+Below the root only the N best moves are searched (forward pruning, N-best selective search), a
+transposition table keyed by Zobrist hashes stores the result of every searched position, and a
+quiescence search extends the lines that end while a threat must still be answered.
 """
 import time
 
@@ -41,15 +42,18 @@ def from_table(score, ply):
 class SearchEngine():
     """Searches the game tree on the game's board, playing and undoing moves in place."""
 
-    def __init__(self, weights=WEIGHTS, branching=Defines.BRANCHING, table=True):
-        self.m_weights = weights      # Evaluation weights (tuned by the genetic algorithm).
-        self.m_branching = branching  # Moves searched below the root (N-best forward pruning).
+    def __init__(self, weights=WEIGHTS, branching=Defines.BRANCHING, table=True,
+                 quiescence=Defines.QUIESCENCE):
+        self.m_weights = weights        # Evaluation weights (tuned by the genetic algorithm).
+        self.m_branching = branching    # Moves searched below the root (N-best forward pruning).
+        self.m_quiescence = quiescence  # Extra plies allowed to answer threats at the horizon.
         # Transposition table: hash -> (depth, kind of score, score, best move). It is kept
         # between moves, because the positions of the next turns are searched again.
         self.m_table = {} if table else None
         self.m_board = None
         self.m_deadline = None
-        self.m_best_move = None
+        self.m_best_move = None  # Best root move (and its score) of the iteration in progress.
+        self.m_best_score = 0
         self.m_depth = 0         # Depth of the last completed iteration.
         self.m_total_nodes = 0   # Nodes expanded in the last search.
         self.m_pruned_nodes = 0  # Sibling moves skipped by alpha-beta cut-offs.
@@ -60,12 +64,18 @@ class SearchEngine():
         self.m_board = board
         self.m_deadline = start + time_limit * Defines.TIME_SAFETY if time_limit else None
         self.m_depth = self.m_total_nodes = self.m_pruned_nodes = 0
+        self.m_best_move, self.m_best_score = None, 0
         best = None
         for depth in range(1, max_depth + 1):
             try:
                 score = self.negamax(depth, -INFINITY, INFINITY, color, 0)
             except SearchTimeout:
-                break  # Keep the move of the last completed iteration.
+                # Keep the move of the last completed iteration. If not even the first one
+                # finished, play the best root move found so far (or the best-ranked candidate).
+                if best is None:
+                    move = self.m_best_move or generate_moves(board, color, self.m_weights)[0]
+                    best = (move, self.m_best_score)
+                break
             best, self.m_depth = (self.m_best_move, score), depth
             # Stop on a forced result, or when the next (much bigger) iteration cannot finish.
             elapsed = time.perf_counter() - start
@@ -76,11 +86,14 @@ class SearchEngine():
     def negamax(self, depth, alpha, beta, color, ply):
         """Value of the position for `color` (the side to move) within the (alpha, beta) window."""
         self.m_total_nodes += 1
-        # The first iteration always completes, so there is always a move to play.
-        if self.m_depth and self.m_deadline and time.perf_counter() > self.m_deadline:
+        if self.m_deadline and time.perf_counter() > self.m_deadline:
             raise SearchTimeout
         board = self.m_board
-        if ply and (depth == 0 or board.winner or board.is_full() or board.threats[color]):
+        if ply and (board.winner or board.is_full() or board.threats[color]):
+            return self.evaluate(color, ply)
+        # Quiescence search: a position where we must still answer a threat is not quiet, so the
+        # forced defences are searched up to m_quiescence plies beyond the depth limit.
+        if depth <= 0 and (depth <= -self.m_quiescence or not board.threats[opponent(color)]):
             return self.evaluate(color, ply)
 
         # Transposition table: a result searched at least as deep settles the node.
@@ -95,8 +108,10 @@ class SearchEngine():
                 return score
 
         moves = generate_moves(board, color, self.m_weights)
-        if ply:
-            moves = moves[:self.m_branching]  # Forward pruning: the root keeps every candidate.
+        # Forward pruning, except at the root and for forced defences: cutting a defence could
+        # hide the refutation of an attack and make a false win look forced.
+        if ply and not board.threats[opponent(color)]:
+            moves = moves[:self.m_branching]
         if table_move:
             # The best move found earlier for this position is searched first.
             moves = [table_move] + [move for move in moves if move != table_move]
@@ -112,7 +127,7 @@ class SearchEngine():
             if score > best:
                 best, best_move = score, move
                 if ply == 0:
-                    self.m_best_move = move
+                    self.m_best_move, self.m_best_score = move, score
             alpha = max(alpha, score)
             if alpha >= beta:
                 self.m_pruned_nodes += len(moves) - i - 1
