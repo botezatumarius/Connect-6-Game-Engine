@@ -4,6 +4,7 @@ import time
 
 from board import Board, opponent
 from defines import Defines
+from opening_book import book_move
 from search_engine import SearchEngine
 from tools import log_to_file, move2msg, msg2move, print_board
 
@@ -113,8 +114,12 @@ class GameEngine:
         self.m_to_move = opponent(color)
 
     def search_a_move(self, color):
-        """Search within the time limit and print the statistics (time, depth, nodes, pruned, score)."""
+        """Book move, or search within the time limit and print the statistics (time, depth, nodes...)."""
         start = time.perf_counter()
+        move = book_move(self.m_board)
+        if move:
+            print(f"info time {time.perf_counter() - start:.3f} book")
+            return move
         engine = self.m_search_engine
         best_move, score = engine.search(self.m_board, color, Defines.MAX_DEPTH, self.m_time_limit)
         elapsed = time.perf_counter() - start
