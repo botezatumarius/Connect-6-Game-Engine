@@ -62,7 +62,10 @@ class GameEngine:
                 break
             handler = self.m_commands.get(command)
             if handler:
-                handler(command, arg.strip())
+                try:
+                    handler(command, arg.strip())
+                except Exception as error:  # A malformed command must never stop the engine.
+                    log_to_file(f"error in '{msg}': {error!r}")
             sys.stdout.flush()  # The GUI reads through a pipe: answer immediately.
 
     def on_name(self, command, arg):
@@ -110,6 +113,9 @@ class GameEngine:
 
     def place(self, move, color):
         """Play a move and pass the turn to the other colour."""
+        cells = self.m_board.cells
+        if not 1 <= len(move) <= 2 or any(not 0 <= cell < len(cells) or cells[cell] for cell in move):
+            raise ValueError(f"illegal move {move}")
         self.m_board.play(move, color)
         self.m_to_move = opponent(color)
 
