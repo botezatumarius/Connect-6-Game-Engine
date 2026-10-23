@@ -12,6 +12,9 @@ build/
 dist/
 *.spec
 
+# Engine versions checked out by the experiments
+experiments/versions/
+
 # Logs
 *.log
 
