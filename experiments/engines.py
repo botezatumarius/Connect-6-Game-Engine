@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-VERSIONS = {"v1": "session-1", "v2": "session-2", "v3": "session-3", "v4": "session-4"}
+VERSIONS = {"v1": "session-1", "v2": "session-2", "v3": "session-3", "v4": "session-4", "v5": "session-5"}
 VERSIONS_DIR = ROOT / "experiments" / "versions"  # Git worktrees of the tags (not committed).
 CLOUDICT = {"Windows": "cloudict.exe", "Darwin": "cloudict.app", "Linux": "cloudict.linux"}
 

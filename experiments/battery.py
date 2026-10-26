@@ -3,7 +3,7 @@
 An attack succeeds if the engine wins within the proven number of turns; a defence succeeds if
 Cloudict has not won after the threatened number of turns plus one.
 
-Usage: python experiments/battery.py v1 v2 v3 v4 [--level 4]
+Usage: python experiments/battery.py v1 v2 v3 v4 [--level 4] [--out battery]
 """
 import argparse
 import csv
@@ -35,6 +35,7 @@ def main():
     parser.add_argument("engines", nargs="+")
     parser.add_argument("--level", type=int, default=4, help="GUI level: our seconds, Cloudict's depth")
     parser.add_argument("--jobs", type=int, default=4, help="games played in parallel")
+    parser.add_argument("--out", default="battery", help="name of the results file")
     args = parser.parse_args()
 
     tasks = [(engine, kind, name, moves, turns, args.level)
@@ -44,7 +45,7 @@ def main():
     for engine in args.engines:
         spec(engine)  # Check out the versions before the workers start.
     RESULTS.mkdir(parents=True, exist_ok=True)
-    with open(RESULTS / "battery.csv", "w", newline="") as file, Pool(args.jobs) as pool:
+    with open(RESULTS / f"{args.out}.csv", "w", newline="") as file, Pool(args.jobs) as pool:
         writer = csv.writer(file)
         writer.writerow(["engine", "kind", "position", "turns", "success", "result", "turns_played",
                          "first_move_seconds", "depth", "nodes", "pruned"])

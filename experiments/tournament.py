@@ -3,7 +3,7 @@
 Every pair of engines plays each opening twice, swapping colours. Writes the games and the
 statistics of every move (decision time, depth, expanded and pruned nodes).
 
-Usage: python experiments/tournament.py v1 v2 v3 v4 cloudict [--level 4] [--openings 2]
+Usage: python experiments/tournament.py v1 v2 v3 v4 cloudict [--level 4] [--openings 2] [--out tournament]
 """
 import argparse
 import csv
@@ -40,6 +40,7 @@ def main():
     parser.add_argument("--level", type=int, default=4, help="GUI level: our seconds, Cloudict's depth")
     parser.add_argument("--openings", type=int, default=2, help="number of starting positions used")
     parser.add_argument("--jobs", type=int, default=4, help="games played in parallel")
+    parser.add_argument("--out", default="tournament", help="prefix of the results files")
     args = parser.parse_args()
 
     openings = list(OPENINGS)[:args.openings]
@@ -48,8 +49,8 @@ def main():
     for engine in args.engines:
         spec(engine)  # Check out the versions before the workers start.
     RESULTS.mkdir(parents=True, exist_ok=True)
-    with open(RESULTS / "tournament_games.csv", "w", newline="") as games_file, \
-            open(RESULTS / "tournament_moves.csv", "w", newline="") as moves_file, Pool(args.jobs) as pool:
+    with open(RESULTS / f"{args.out}_games.csv", "w", newline="") as games_file, \
+            open(RESULTS / f"{args.out}_moves.csv", "w", newline="") as moves_file, Pool(args.jobs) as pool:
         games, moves = csv.writer(games_file), csv.writer(moves_file)
         games.writerow(["black", "white", "opening", "winner", "reason", "turns"])
         moves.writerow(["engine", "opening", "turn", "seconds", "depth", "nodes", "pruned"])
