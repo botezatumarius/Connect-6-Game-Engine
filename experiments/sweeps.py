@@ -15,12 +15,13 @@ import tracemalloc
 from multiprocessing import Pool
 
 from engines import ROOT
-from positions import ATTACKS, DEFENCES, all_defences_lose, board_of, to_move, wins_in
+from positions import ATTACKS, DEFENCES, board_of, to_move
 
 sys.path.insert(0, str(ROOT / "engine"))
 from board import SIZE, Board, opponent  # noqa: E402
 from defines import Defines  # noqa: E402
 from search_engine import SearchEngine  # noqa: E402
+from threat_search import all_defences_lose, wins_in  # noqa: E402
 
 RESULTS = ROOT / "experiments" / "results"
 HAND_TUNED = (1, 4, 16, -1, -4, -16, -128)

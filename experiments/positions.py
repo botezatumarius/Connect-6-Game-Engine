@@ -1,4 +1,4 @@
-"""Test positions of session 5, and a threat-space prover that checks each one.
+"""Test positions of session 5, certified with the engine's threat-space search.
 
 Attack positions are forced wins in 1, 2 or 3 turns for the side to move. Defence positions give
 the opponent such a threat while it is our turn, so we must defend. Every position is written as
@@ -10,7 +10,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "engine"))
 
-from board import WINDOWS, Board, opponent  # noqa: E402
+from board import Board, opponent  # noqa: E402
+from threat_search import attack_cells, wins_in  # noqa: E402
 from tools import msg2move  # noqa: E402
 
 BLACK, WHITE = 1, 2
@@ -60,54 +61,6 @@ def board_of(moves):
     for color, move in moves:
         board.play(msg2move(move), color)
     return board
-
-
-def attack_cells(board, color):
-    """Empty cells of live windows where `color` has at least 2 stones (the only cells that make fours)."""
-    counts, other = board.counts[color], board.counts[opponent(color)]
-    return sorted({cell for window, cells in enumerate(WINDOWS) if counts[window] >= 2 and not other[window]
-                   for cell in cells if not board.cells[cell]})
-
-
-def wins_in(board, color, turns):
-    """True if `color`, to move, has a forced win within `turns` turns (threat-space proof).
-
-    Exact for wins within 3 turns, the longest in the battery: a defender stone can only matter
-    where the attacker could still make a four, i.e. in a window holding two or more of its stones.
-    """
-    if board.threats[color]:
-        return True  # A four or five is completed with one move.
-    if turns == 1 or board.threats[opponent(color)]:
-        return False  # No forcing attack while the opponent threatens to win.
-    for move in combinations(attack_cells(board, color), 2):
-        board.play(move, color)
-        try:
-            blockers = board.blockers(color)
-            if blockers >= 3:
-                return True  # The opponent cannot block every threat.
-            if blockers and turns > 2 and all_defences_lose(board, color, turns - 1):
-                return True
-        finally:
-            board.undo()
-    return False
-
-
-def all_defences_lose(board, color, turns):
-    """After a threat by `color`, every defence that blocks it still loses within `turns` turns."""
-    defender = opponent(color)
-    gaps = [{cell for cell in WINDOWS[w] if not board.cells[cell]} for w in board.threats[color]]
-    cells = sorted(set().union(*gaps, attack_cells(board, color)))
-    # Two blocking stones, or (for a single threat) one block plus a stone that changes nothing.
-    defences = [move for move in combinations(cells, 2) if all(gap & set(move) for gap in gaps)]
-    defences += [(cell,) for cell in cells if all(cell in gap for gap in gaps)]
-    for defence in defences:
-        board.play(defence, defender)
-        try:
-            if board.threats[defender] or not wins_in(board, color, turns):
-                return False
-        finally:
-            board.undo()
-    return True
 
 
 def exact_win(moves, color, turns):

@@ -2,7 +2,8 @@
 
 Below the root only the N best moves are searched (forward pruning, N-best selective search), a
 transposition table keyed by Zobrist hashes stores the result of every searched position, and a
-quiescence search extends the lines that end while a threat must still be answered.
+quiescence search can extend the lines that end while a threat must still be answered. A
+threat-space search looks for forced wins before the search and checks the chosen move after it.
 """
 import time
 
@@ -10,6 +11,7 @@ from board import opponent
 from defines import Defines
 from evaluation import WEIGHTS, evaluate
 from move_generator import generate_moves
+from threat_search import winning_attack, wins_in
 
 INFINITY = Defines.MAXINT + 1
 WIN_BOUND = Defines.MAXINT - 1000  # Scores beyond it are wins or losses at a known distance.
@@ -54,6 +56,7 @@ class SearchEngine():
         self.m_deadline = None
         self.m_best_move = None  # Best root move (and its score) of the iteration in progress.
         self.m_best_score = 0
+        self.m_root_scores = []  # (score, move) of every root move of the iteration in progress.
         self.m_depth = 0         # Depth of the last completed iteration.
         self.m_total_nodes = 0   # Nodes expanded in the last search.
         self.m_pruned_nodes = 0  # Sibling moves skipped by alpha-beta cut-offs.
@@ -62,11 +65,25 @@ class SearchEngine():
         """Best move for `color` and its score, searching deeper until time or depth runs out."""
         start = time.perf_counter()
         self.m_board = board
-        self.m_deadline = start + time_limit * Defines.TIME_SAFETY if time_limit else None
         self.m_depth = self.m_total_nodes = self.m_pruned_nodes = 0
         self.m_best_move, self.m_best_score = None, 0
-        best = None
+
+        # 1. Threat-space attack: a forced win made only of threats is played at once, the
+        #    shortest first (wins in one move are found by the alpha-beta search below).
+        self.m_deadline = start + time_limit * Defines.ATTACK_TIME if time_limit else None
+        try:
+            for turns in range(2, Defines.THREAT_TURNS + 1):
+                attack = winning_attack(board, color, turns, self.tick)
+                if attack:
+                    return attack, Defines.MAXINT - 2 * turns
+        except SearchTimeout:
+            pass
+
+        # 2. Iterative deepening alpha-beta.
+        self.m_deadline = start + time_limit * Defines.TIME_SAFETY if time_limit else None
+        best, ranking = None, []
         for depth in range(1, max_depth + 1):
+            self.m_root_scores = []
             try:
                 score = self.negamax(depth, -INFINITY, INFINITY, color, 0)
             except SearchTimeout:
@@ -77,17 +94,44 @@ class SearchEngine():
                     best = (move, self.m_best_score)
                 break
             best, self.m_depth = (self.m_best_move, score), depth
+            ranking = [move for _, move in sorted(self.m_root_scores, key=lambda item: item[0], reverse=True)]
             # Stop on a forced result, or when the next (much bigger) iteration cannot finish.
             elapsed = time.perf_counter() - start
             if abs(score) > WIN_BOUND or (time_limit and elapsed > time_limit * Defines.NEXT_ITERATION):
                 break
+
+        # 3. Safety: never play into a forced threat-space win of the opponent if it can be avoided.
+        if abs(best[1]) <= WIN_BOUND:
+            self.m_deadline = start + time_limit * Defines.SAFETY_TIME if time_limit else None
+            moves = [best[0]] + [move for move in ranking if move != best[0]]
+            best = (self.safe_move(color, moves[:Defines.SAFETY_MOVES]), best[1])
         return best
+
+    def safe_move(self, color, moves):
+        """The first of `moves` after which the opponent has no forced win within 2 turns."""
+        board = self.m_board
+        try:
+            for move in moves:
+                board.play(move, color)
+                try:
+                    lost = wins_in(board, opponent(color), 2, self.tick)
+                finally:
+                    board.undo()
+                if not lost:
+                    return move
+        except SearchTimeout:
+            pass
+        return moves[0]  # Every move loses (or no time is left): keep the search's choice.
+
+    def tick(self):
+        """Stop the search (by raising SearchTimeout) once its deadline has passed."""
+        if self.m_deadline and time.perf_counter() > self.m_deadline:
+            raise SearchTimeout
 
     def negamax(self, depth, alpha, beta, color, ply):
         """Value of the position for `color` (the side to move) within the (alpha, beta) window."""
         self.m_total_nodes += 1
-        if self.m_deadline and time.perf_counter() > self.m_deadline:
-            raise SearchTimeout
+        self.tick()
         board = self.m_board
         if ply and (board.winner or board.is_full() or board.threats[color]):
             return self.evaluate(color, ply)
@@ -128,6 +172,8 @@ class SearchEngine():
                 best, best_move = score, move
                 if ply == 0:
                     self.m_best_move, self.m_best_score = move, score
+            if ply == 0:
+                self.m_root_scores.append((score, move))
             alpha = max(alpha, score)
             if alpha >= beta:
                 self.m_pruned_nodes += len(moves) - i - 1
