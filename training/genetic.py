@@ -174,6 +174,7 @@ def progress(pool):
 
 
 def main():
+    """Evolve and validate the weights (or only measure the progress with --progress)."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--generations", type=int, default=20)
     parser.add_argument("--population", type=int, default=16)

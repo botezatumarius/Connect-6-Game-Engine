@@ -41,6 +41,7 @@ OPENINGS = ((), ("JK", "KJ"), ("IJ", "KK"), ("HH", "LL"), ("JL", "LJ"), ("IK", "
 
 
 def cell(name):
+    """Cell index of a two-letter coordinate such as 'JJ'."""
     return (ord(name[0]) - ord("A")) * SIZE + ord(name[1]) - ord("A")
 
 
@@ -100,6 +101,7 @@ def memory(table):
 
 
 def main():
+    """Run the decisions, the duels and the memory measurement, and write the results."""
     RESULTS.mkdir(parents=True, exist_ok=True)
     positions = [("attack", name, moves, turns) for name, (moves, turns) in ATTACKS.items()]
     positions += [("defence", name, moves, turns) for name, (moves, turns) in DEFENCES.items()]

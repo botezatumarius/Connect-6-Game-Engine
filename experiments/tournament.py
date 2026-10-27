@@ -35,6 +35,7 @@ def run(task):
 
 
 def main():
+    """Play every pairing from every opening and write the games and moves."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("engines", nargs="+")
     parser.add_argument("--level", type=int, default=4, help="GUI level: our seconds, Cloudict's depth")

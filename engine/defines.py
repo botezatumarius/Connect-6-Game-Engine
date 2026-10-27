@@ -2,6 +2,8 @@
 
 
 class Defines:
+    """Named constants shared by every module."""
+
     ENGINE_NAME = "mbo"
     LOG_FILE = "mbo-engine.log"
     BOARD_SIZE = 19

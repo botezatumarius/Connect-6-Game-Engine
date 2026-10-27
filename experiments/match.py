@@ -49,6 +49,7 @@ class Engine:
         self.send(f"depth {level}")
 
     def send(self, line):
+        """Write one command line to the engine."""
         self.process.stdin.write(line + "\n")
         self.process.stdin.flush()
 
@@ -76,6 +77,7 @@ class Engine:
         return line[5:].strip().upper(), seconds, stats
 
     def close(self):
+        """Ask the engine to quit, killing it if it does not."""
         try:
             self.send("quit")
             self.process.wait(timeout=5)

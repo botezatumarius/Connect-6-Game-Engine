@@ -54,6 +54,7 @@ def search(task):
 
 
 def main():
+    """Search every opening class in parallel and write engine/book_moves.py."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--seconds", type=float, default=30, help="search time per position")
     args = parser.parse_args()

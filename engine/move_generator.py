@@ -58,6 +58,7 @@ def rank_moves(board, color, moves, scores, weights):
     it cannot block them all); ties are broken by the cell scores.
     """
     def value(move):
+        """Evaluation after the move (for the mover), then its cell scores."""
         board.play(move, color)
         score = -evaluate(board, opponent(color), weights)  # Our view of the opponent's position.
         board.undo()

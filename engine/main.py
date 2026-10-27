@@ -3,6 +3,7 @@ from game_engine import GameEngine
 
 
 def main():
+    """Run the engine on stdin/stdout until quit."""
     GameEngine().run()
 
 

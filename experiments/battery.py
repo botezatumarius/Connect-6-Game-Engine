@@ -31,6 +31,7 @@ def run(task):
 
 
 def main():
+    """Play every position with every engine and write the results."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("engines", nargs="+")
     parser.add_argument("--level", type=int, default=4, help="GUI level: our seconds, Cloudict's depth")
