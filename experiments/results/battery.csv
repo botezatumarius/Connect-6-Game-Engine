@@ -1,0 +1,49 @@
+engine,kind,position,turns,success,result,turns_played,first_move_seconds,depth,nodes,pruned
+v1,attack,win in 1 (black),1,0,stopped after 1 turns,1,1.321,0,2070,0
+v1,attack,win in 1 (white),1,0,stopped after 1 turns,1,1.314,0,2070,0
+v1,attack,win in 2 (black),2,0,stopped after 3 turns,3,1.299,0,2070,0
+v1,attack,win in 2 (white),2,0,stopped after 3 turns,3,1.339,0,2070,0
+v1,attack,win in 3 (black),3,0,stopped after 5 turns,5,1.579,0,2070,0
+v1,attack,win in 3 (white),3,0,stopped after 5 turns,5,1.530,0,2070,0
+v1,defence,defend in 1 (white),1,0,Cloudict.Connect6 connects 6,2,1.496,0,2070,0
+v1,defence,defend in 1 (black),1,0,Cloudict.Connect6 connects 6,2,1.588,0,2070,0
+v1,defence,defend in 2 (white),2,0,Cloudict.Connect6 connects 6,4,1.595,0,2070,0
+v1,defence,defend in 2 (black),2,0,Cloudict.Connect6 connects 6,4,1.536,0,2070,0
+v1,defence,defend in 3 (white),3,0,Cloudict.Connect6 connects 6,4,1.475,0,2070,0
+v1,defence,defend in 3 (black),3,0,Cloudict.Connect6 connects 6,4,1.526,0,2070,0
+v2,attack,win in 1 (black),1,1,mbo connects 6,1,0.040,0,74,1232
+v2,attack,win in 1 (white),1,1,mbo connects 6,1,0.057,0,88,1848
+v2,attack,win in 2 (black),2,1,mbo connects 6,3,0.063,0,180,1891
+v2,attack,win in 2 (white),2,1,mbo connects 6,3,0.070,0,181,1890
+v2,attack,win in 3 (black),3,1,mbo connects 6,5,0.101,0,267,1804
+v2,attack,win in 3 (white),3,1,mbo connects 6,5,0.070,0,239,1832
+v2,defence,defend in 1 (white),1,1,stopped after 4 turns,4,0.060,0,135,1936
+v2,defence,defend in 1 (black),1,1,stopped after 4 turns,4,0.064,0,180,1891
+v2,defence,defend in 2 (white),2,1,stopped after 6 turns,6,0.102,0,184,1887
+v2,defence,defend in 2 (black),2,1,stopped after 6 turns,6,0.052,0,141,1930
+v2,defence,defend in 3 (white),3,1,stopped after 8 turns,8,0.099,0,376,1695
+v2,defence,defend in 3 (black),3,1,stopped after 8 turns,8,0.088,0,543,1528
+v3,attack,win in 1 (black),1,1,mbo connects 6,1,0.007,0,2,0
+v3,attack,win in 1 (white),1,1,mbo connects 6,1,0.007,0,2,0
+v3,attack,win in 2 (black),2,1,mbo connects 6,3,0.185,0,135,701
+v3,attack,win in 2 (white),2,1,mbo connects 6,3,0.151,0,135,701
+v3,attack,win in 3 (black),3,1,mbo connects 6,5,0.172,0,97,707
+v3,attack,win in 3 (white),3,1,mbo connects 6,5,0.179,0,141,1031
+v3,defence,defend in 1 (white),1,1,stopped after 4 turns,4,0.015,0,47,0
+v3,defence,defend in 1 (black),1,1,stopped after 4 turns,4,0.025,0,95,44
+v3,defence,defend in 2 (white),2,1,stopped after 6 turns,6,0.265,0,201,1870
+v3,defence,defend in 2 (black),2,1,stopped after 6 turns,6,0.248,0,158,1913
+v3,defence,defend in 3 (white),3,1,stopped after 8 turns,8,0.278,0,250,1821
+v3,defence,defend in 3 (black),3,1,stopped after 8 turns,8,0.253,0,443,1628
+v4,attack,win in 1 (black),1,1,mbo connects 6,1,0.007,1,2,0
+v4,attack,win in 1 (white),1,1,mbo connects 6,1,0.009,1,2,0
+v4,attack,win in 2 (black),2,1,mbo connects 6,3,0.020,1,67,0
+v4,attack,win in 2 (white),2,1,mbo connects 6,3,0.019,1,67,0
+v4,attack,win in 3 (black),3,1,mbo connects 6,5,1.044,3,999,1414
+v4,attack,win in 3 (white),3,1,mbo connects 6,5,1.761,3,1134,1887
+v4,defence,defend in 1 (white),1,1,stopped after 4 turns,4,1.022,5,1002,1132
+v4,defence,defend in 1 (black),1,1,stopped after 4 turns,4,1.400,4,853,1001
+v4,defence,defend in 2 (white),2,1,stopped after 6 turns,6,1.911,3,3728,1427
+v4,defence,defend in 2 (black),2,0,Cloudict.Connect6 connects 6,6,1.667,3,3362,1229
+v4,defence,defend in 3 (white),3,1,stopped after 8 turns,8,1.397,3,1336,1404
+v4,defence,defend in 3 (black),3,1,stopped after 8 turns,8,1.316,3,1575,1424

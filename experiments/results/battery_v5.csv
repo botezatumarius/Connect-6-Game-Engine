@@ -1,0 +1,13 @@
+engine,kind,position,turns,success,result,turns_played,first_move_seconds,depth,nodes,pruned
+v5,attack,win in 1 (black),1,1,mbo connects 6,1,0.008,1,2,0
+v5,attack,win in 1 (white),1,1,mbo connects 6,1,0.015,1,2,0
+v5,attack,win in 2 (black),2,1,mbo connects 6,3,0.010,0,0,0
+v5,attack,win in 2 (white),2,1,mbo connects 6,3,0.010,0,0,0
+v5,attack,win in 3 (black),3,1,mbo connects 6,5,1.717,3,999,1414
+v5,attack,win in 3 (white),3,1,mbo connects 6,5,2.144,3,1134,1887
+v5,defence,defend in 1 (white),1,1,stopped after 4 turns,4,2.125,6,2525,2127
+v5,defence,defend in 1 (black),1,1,stopped after 4 turns,4,1.186,4,853,1001
+v5,defence,defend in 2 (white),2,1,stopped after 6 turns,6,1.366,3,3728,1427
+v5,defence,defend in 2 (black),2,1,stopped after 6 turns,6,1.384,3,3362,1229
+v5,defence,defend in 3 (white),3,1,stopped after 8 turns,8,1.157,3,1336,1404
+v5,defence,defend in 3 (black),3,1,stopped after 8 turns,8,1.149,3,1575,1424

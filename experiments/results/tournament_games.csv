@@ -1,0 +1,41 @@
+black,white,opening,winner,reason,turns
+v1,v2,JJ/JKKJ,v2,mbo connects 6,6
+v2,v1,empty,v2,mbo connects 6,7
+v1,v2,empty,v2,mbo connects 6,10
+v2,v1,JJ/JKKJ,v2,mbo connects 6,9
+v1,v3,empty,v3,mbo connects 6,8
+v3,v1,empty,v3,mbo connects 6,7
+v1,v3,JJ/JKKJ,v3,mbo connects 6,6
+v3,v1,JJ/JKKJ,v3,mbo connects 6,9
+v4,v1,JJ/JKKJ,v4,mbo connects 6,5
+v1,v4,JJ/JKKJ,v4,mbo connects 6,6
+v1,v4,empty,v4,mbo connects 6,10
+v4,v1,empty,v4,mbo connects 6,11
+cloudict,v1,empty,cloudict,Cloudict.Connect6 connects 6,7
+cloudict,v1,JJ/JKKJ,cloudict,Cloudict.Connect6 connects 6,7
+v1,cloudict,empty,cloudict,Cloudict.Connect6 connects 6,8
+v1,cloudict,JJ/JKKJ,cloudict,Cloudict.Connect6 connects 6,6
+v3,v2,empty,v2,mbo connects 6,46
+v3,v2,JJ/JKKJ,v3,mbo connects 6,35
+v2,v4,empty,v4,mbo connects 6,18
+v4,v2,empty,v4,mbo connects 6,21
+v2,v3,empty,draw,full board,181
+v2,v4,JJ/JKKJ,v4,mbo connects 6,20
+v2,v3,JJ/JKKJ,draw,full board,179
+v4,v2,JJ/JKKJ,v4,mbo connects 6,25
+v2,cloudict,empty,cloudict,Cloudict.Connect6 connects 6,18
+v2,cloudict,JJ/JKKJ,cloudict,Cloudict.Connect6 connects 6,16
+cloudict,v2,JJ/JKKJ,cloudict,Cloudict.Connect6 connects 6,17
+cloudict,v2,empty,cloudict,Cloudict.Connect6 connects 6,23
+v4,v3,empty,v4,mbo connects 6,31
+v3,v4,empty,v4,mbo connects 6,40
+v4,v3,JJ/JKKJ,v3,mbo connects 6,28
+cloudict,v3,empty,cloudict,Cloudict.Connect6 connects 6,19
+cloudict,v3,JJ/JKKJ,cloudict,Cloudict.Connect6 connects 6,17
+v3,v4,JJ/JKKJ,v4,mbo connects 6,60
+v3,cloudict,empty,v3,timeout of Cloudict.Connect6,9
+v3,cloudict,JJ/JKKJ,v3,timeout of Cloudict.Connect6,7
+v4,cloudict,empty,cloudict,Cloudict.Connect6 connects 6,24
+cloudict,v4,empty,cloudict,Cloudict.Connect6 connects 6,19
+cloudict,v4,JJ/JKKJ,cloudict,Cloudict.Connect6 connects 6,17
+v4,cloudict,JJ/JKKJ,cloudict,Cloudict.Connect6 connects 6,22

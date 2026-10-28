@@ -1,0 +1,181 @@
+parameter,value,kind,position,correct,seconds,depth,nodes,pruned
+time limit (s),0.5,attack,win in 1 (black),1,0.002,1,2,0
+time limit (s),0.5,attack,win in 1 (white),1,0.001,1,2,0
+time limit (s),0.5,attack,win in 2 (black),1,0.017,1,67,0
+time limit (s),0.5,attack,win in 2 (white),1,0.020,1,67,0
+time limit (s),0.5,attack,win in 3 (black),1,0.208,2,202,698
+time limit (s),0.5,attack,win in 3 (white),0,0.271,2,243,771
+time limit (s),0.5,defence,defend in 1 (white),1,0.157,4,184,114
+time limit (s),0.5,defence,defend in 1 (black),1,0.164,3,175,131
+time limit (s),0.5,defence,defend in 2 (white),1,0.408,1,180,396
+time limit (s),0.5,defence,defend in 2 (black),1,0.401,1,208,522
+time limit (s),0.5,defence,defend in 3 (white),1,0.401,1,208,522
+time limit (s),0.5,defence,defend in 3 (black),1,0.402,1,219,522
+time limit (s),1,attack,win in 1 (black),1,0.001,1,2,0
+time limit (s),1,attack,win in 1 (white),1,0.001,1,2,0
+time limit (s),1,attack,win in 2 (black),1,0.013,1,67,0
+time limit (s),1,attack,win in 2 (white),1,0.014,1,67,0
+time limit (s),1,attack,win in 3 (black),1,0.801,2,833,1314
+time limit (s),1,attack,win in 3 (white),0,0.270,2,243,771
+time limit (s),1,defence,defend in 1 (white),1,0.800,4,990,1077
+time limit (s),1,defence,defend in 1 (black),1,0.800,3,698,686
+time limit (s),1,defence,defend in 2 (white),1,0.435,2,218,576
+time limit (s),1,defence,defend in 2 (black),1,0.449,2,218,576
+time limit (s),1,defence,defend in 3 (white),1,0.435,2,218,576
+time limit (s),1,defence,defend in 3 (black),1,0.480,2,227,567
+time limit (s),2,attack,win in 1 (black),1,0.001,1,2,0
+time limit (s),2,attack,win in 1 (white),1,0.001,1,2,0
+time limit (s),2,attack,win in 2 (black),1,0.013,1,67,0
+time limit (s),2,attack,win in 2 (white),1,0.013,1,67,0
+time limit (s),2,attack,win in 3 (black),1,0.903,3,999,1414
+time limit (s),2,attack,win in 3 (white),1,1.356,3,1134,1887
+time limit (s),2,defence,defend in 1 (white),1,0.850,5,1002,1132
+time limit (s),2,defence,defend in 1 (black),1,1.064,4,853,1001
+time limit (s),2,defence,defend in 2 (white),1,1.590,3,3728,1427
+time limit (s),2,defence,defend in 2 (black),1,0.587,2,218,576
+time limit (s),2,defence,defend in 3 (white),1,0.674,2,218,576
+time limit (s),2,defence,defend in 3 (black),1,1.446,3,1575,1424
+time limit (s),4,attack,win in 1 (black),1,0.001,1,2,0
+time limit (s),4,attack,win in 1 (white),1,0.001,1,2,0
+time limit (s),4,attack,win in 2 (black),1,0.015,1,67,0
+time limit (s),4,attack,win in 2 (white),1,0.010,1,67,0
+time limit (s),4,attack,win in 3 (black),1,0.925,3,999,1414
+time limit (s),4,attack,win in 3 (white),1,1.305,3,1134,1887
+time limit (s),4,defence,defend in 1 (white),1,2.137,6,2525,2127
+time limit (s),4,defence,defend in 1 (black),1,1.103,4,853,1001
+time limit (s),4,defence,defend in 2 (white),1,2.092,3,3728,1427
+time limit (s),4,defence,defend in 2 (black),1,1.878,3,3362,1229
+time limit (s),4,defence,defend in 3 (white),1,1.385,3,1336,1404
+time limit (s),4,defence,defend in 3 (black),1,1.508,3,1575,1424
+time limit (s),8,attack,win in 1 (black),1,0.001,1,2,0
+time limit (s),8,attack,win in 1 (white),1,0.001,1,2,0
+time limit (s),8,attack,win in 2 (black),1,0.017,1,67,0
+time limit (s),8,attack,win in 2 (white),1,0.017,1,67,0
+time limit (s),8,attack,win in 3 (black),1,1.193,3,999,1414
+time limit (s),8,attack,win in 3 (white),1,1.657,3,1134,1887
+time limit (s),8,defence,defend in 1 (white),1,2.224,6,2525,2127
+time limit (s),8,defence,defend in 1 (black),1,3.039,5,2085,3257
+time limit (s),8,defence,defend in 2 (white),1,2.007,3,3728,1427
+time limit (s),8,defence,defend in 2 (black),1,4.702,4,6602,3746
+time limit (s),8,defence,defend in 3 (white),1,6.407,3,2617,6583
+time limit (s),8,defence,defend in 3 (black),1,6.411,3,3281,5922
+branching,5,attack,win in 1 (black),1,0.001,1,2,0
+branching,5,attack,win in 1 (white),1,0.001,1,2,0
+branching,5,attack,win in 2 (black),1,0.015,1,67,0
+branching,5,attack,win in 2 (white),1,0.018,1,67,0
+branching,5,attack,win in 3 (black),1,1.078,3,669,1274
+branching,5,attack,win in 3 (white),1,1.747,3,794,1387
+branching,5,defence,defend in 1 (white),1,0.658,6,374,393
+branching,5,defence,defend in 1 (black),1,3.206,5,1450,1432
+branching,5,defence,defend in 2 (white),1,1.561,3,3190,567
+branching,5,defence,defend in 2 (black),1,1.705,3,3021,543
+branching,5,defence,defend in 3 (white),1,2.234,3,1067,596
+branching,5,defence,defend in 3 (black),1,1.593,3,1336,603
+branching,10,attack,win in 1 (black),1,0.001,1,2,0
+branching,10,attack,win in 1 (white),1,0.001,1,2,0
+branching,10,attack,win in 2 (black),1,0.014,1,67,0
+branching,10,attack,win in 2 (white),1,0.013,1,67,0
+branching,10,attack,win in 3 (black),1,0.868,3,999,1414
+branching,10,attack,win in 3 (white),1,1.372,3,1134,1887
+branching,10,defence,defend in 1 (white),1,1.060,5,1002,1132
+branching,10,defence,defend in 1 (black),1,1.292,4,853,1001
+branching,10,defence,defend in 2 (white),1,1.738,3,3728,1427
+branching,10,defence,defend in 2 (black),1,2.212,3,3362,1229
+branching,10,defence,defend in 3 (white),1,1.502,3,1336,1404
+branching,10,defence,defend in 3 (black),1,1.420,3,1575,1424
+branching,20,attack,win in 1 (black),1,0.001,1,2,0
+branching,20,attack,win in 1 (white),1,0.001,1,2,0
+branching,20,attack,win in 2 (black),1,0.014,1,67,0
+branching,20,attack,win in 2 (white),1,0.014,1,67,0
+branching,20,attack,win in 3 (black),1,1.112,3,1659,1694
+branching,20,attack,win in 3 (white),1,1.620,3,1814,2887
+branching,20,defence,defend in 1 (white),1,3.203,4,2755,7053
+branching,20,defence,defend in 1 (black),1,2.066,4,1995,3598
+branching,20,defence,defend in 2 (white),1,2.061,3,4005,3088
+branching,20,defence,defend in 2 (black),1,2.075,3,3876,2677
+branching,20,defence,defend in 3 (white),1,2.388,3,1801,3132
+branching,20,defence,defend in 3 (black),1,1.933,3,2091,3478
+transposition table,off,attack,win in 1 (black),1,0.001,1,2,0
+transposition table,off,attack,win in 1 (white),1,0.001,1,2,0
+transposition table,off,attack,win in 2 (black),1,0.036,1,67,0
+transposition table,off,attack,win in 2 (white),1,0.015,1,67,0
+transposition table,off,attack,win in 3 (black),1,1.182,3,999,1414
+transposition table,off,attack,win in 3 (white),1,1.442,3,1082,1769
+transposition table,off,defence,defend in 1 (white),1,1.531,5,1036,1247
+transposition table,off,defence,defend in 1 (black),1,1.904,4,1007,1347
+transposition table,off,defence,defend in 2 (white),1,1.903,3,3728,1427
+transposition table,off,defence,defend in 2 (black),1,1.999,3,3372,1273
+transposition table,off,defence,defend in 3 (white),1,1.949,3,1370,1530
+transposition table,off,defence,defend in 3 (black),1,1.682,3,1560,1420
+transposition table,on,attack,win in 1 (black),1,0.001,1,2,0
+transposition table,on,attack,win in 1 (white),1,0.001,1,2,0
+transposition table,on,attack,win in 2 (black),1,0.015,1,67,0
+transposition table,on,attack,win in 2 (white),1,0.015,1,67,0
+transposition table,on,attack,win in 3 (black),1,1.051,3,999,1414
+transposition table,on,attack,win in 3 (white),1,1.633,3,1134,1887
+transposition table,on,defence,defend in 1 (white),1,1.882,5,1002,1132
+transposition table,on,defence,defend in 1 (black),1,1.451,4,853,1001
+transposition table,on,defence,defend in 2 (white),1,2.084,3,3728,1427
+transposition table,on,defence,defend in 2 (black),1,1.966,3,3362,1229
+transposition table,on,defence,defend in 3 (white),1,1.838,3,1336,1404
+transposition table,on,defence,defend in 3 (black),1,1.574,3,1575,1424
+quiescence plies,0,attack,win in 1 (black),1,0.001,1,2,0
+quiescence plies,0,attack,win in 1 (white),1,0.001,1,2,0
+quiescence plies,0,attack,win in 2 (black),1,0.015,1,67,0
+quiescence plies,0,attack,win in 2 (white),1,0.015,1,67,0
+quiescence plies,0,attack,win in 3 (black),1,1.236,3,999,1414
+quiescence plies,0,attack,win in 3 (white),1,1.704,3,1134,1887
+quiescence plies,0,defence,defend in 1 (white),1,1.207,5,1002,1132
+quiescence plies,0,defence,defend in 1 (black),1,1.279,4,853,1001
+quiescence plies,0,defence,defend in 2 (white),1,1.639,3,3728,1427
+quiescence plies,0,defence,defend in 2 (black),1,1.576,3,3362,1229
+quiescence plies,0,defence,defend in 3 (white),1,1.306,3,1336,1404
+quiescence plies,0,defence,defend in 3 (black),1,1.429,3,1575,1424
+quiescence plies,2,attack,win in 1 (black),1,0.004,1,2,0
+quiescence plies,2,attack,win in 1 (white),1,0.001,1,2,0
+quiescence plies,2,attack,win in 2 (black),1,0.248,1,198,1329
+quiescence plies,2,attack,win in 2 (white),1,0.200,1,198,1329
+quiescence plies,2,attack,win in 3 (black),1,2.921,3,1750,12451
+quiescence plies,2,attack,win in 3 (white),1,3.170,3,3978,7432
+quiescence plies,2,defence,defend in 1 (white),1,1.006,5,1100,1623
+quiescence plies,2,defence,defend in 1 (black),1,1.301,4,1415,2585
+quiescence plies,2,defence,defend in 2 (white),1,1.141,2,3527,851
+quiescence plies,2,defence,defend in 2 (black),1,1.009,2,3041,697
+quiescence plies,2,defence,defend in 3 (white),1,1.641,3,1843,1905
+quiescence plies,2,defence,defend in 3 (black),1,1.709,3,2800,2001
+quiescence plies,4,attack,win in 1 (black),1,0.001,1,2,0
+quiescence plies,4,attack,win in 1 (white),1,0.001,1,2,0
+quiescence plies,4,attack,win in 2 (black),1,0.184,1,198,1329
+quiescence plies,4,attack,win in 2 (white),1,0.178,1,198,1329
+quiescence plies,4,attack,win in 3 (black),1,2.400,3,1750,12451
+quiescence plies,4,attack,win in 3 (white),1,2.823,3,3982,7458
+quiescence plies,4,defence,defend in 1 (white),1,1.095,5,1100,1623
+quiescence plies,4,defence,defend in 1 (black),1,1.381,4,1639,3273
+quiescence plies,4,defence,defend in 2 (white),1,1.105,2,3527,851
+quiescence plies,4,defence,defend in 2 (black),1,1.992,3,5928,1326
+quiescence plies,4,defence,defend in 3 (white),1,1.418,3,1843,1905
+quiescence plies,4,defence,defend in 3 (black),1,1.264,3,2809,2057
+weights,hand-tuned,attack,win in 1 (black),1,0.001,1,2,0
+weights,hand-tuned,attack,win in 1 (white),1,0.001,1,2,0
+weights,hand-tuned,attack,win in 2 (black),1,0.013,1,67,0
+weights,hand-tuned,attack,win in 2 (white),1,0.014,1,67,0
+weights,hand-tuned,attack,win in 3 (black),1,0.954,3,999,1414
+weights,hand-tuned,attack,win in 3 (white),1,1.153,3,1057,1764
+weights,hand-tuned,defence,defend in 1 (white),1,1.491,6,1522,1286
+weights,hand-tuned,defence,defend in 1 (black),1,2.211,5,1950,3859
+weights,hand-tuned,defence,defend in 2 (white),1,1.485,3,3128,1251
+weights,hand-tuned,defence,defend in 2 (black),1,1.395,3,3157,1250
+weights,hand-tuned,defence,defend in 3 (white),1,1.031,3,575,1258
+weights,hand-tuned,defence,defend in 3 (black),1,1.035,3,948,1521
+weights,evolved,attack,win in 1 (black),1,0.001,1,2,0
+weights,evolved,attack,win in 1 (white),1,0.001,1,2,0
+weights,evolved,attack,win in 2 (black),1,0.013,1,67,0
+weights,evolved,attack,win in 2 (white),1,0.013,1,67,0
+weights,evolved,attack,win in 3 (black),1,0.921,3,999,1414
+weights,evolved,attack,win in 3 (white),1,1.387,3,1134,1887
+weights,evolved,defence,defend in 1 (white),1,2.200,6,2525,2127
+weights,evolved,defence,defend in 1 (black),1,2.246,5,2085,3257
+weights,evolved,defence,defend in 2 (white),1,1.168,3,3728,1427
+weights,evolved,defence,defend in 2 (black),1,1.019,3,3362,1229
+weights,evolved,defence,defend in 3 (white),1,3.202,3,2513,6106
+weights,evolved,defence,defend in 3 (black),1,3.203,3,3375,6345

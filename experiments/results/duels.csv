@@ -1,0 +1,7 @@
+parameter,value,games,wins,draws,losses,score
+branching,5,12,3,6,3,0.500
+branching,20,12,3,5,4,0.458
+transposition table,off,12,3,6,3,0.500
+quiescence plies,2,12,1,2,9,0.167
+quiescence plies,4,12,0,1,11,0.042
+weights,hand-tuned,12,2,6,4,0.417
