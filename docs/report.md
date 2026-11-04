@@ -470,3 +470,323 @@ The statement asks to take the CPU and RAM consumption into account. The main de
   (`session-1` … `session-5`), which is what made it possible to measure every version in
   Section 4.
 
+## 4. Experimentation
+
+### 4.1 Setup
+
+All experiments ran on a laptop with an Intel Core i7-8665U (4 cores, 8 threads, 1.9 GHz) and
+16 GB of RAM, under Windows 10 and Python 3.11. The scripts and their raw results (CSV) are in
+the repository (`experiments/`, `training/`), and the README lists the command for each one.
+
+- **Protocol.** `experiments/match.py` plays engines exactly as the GUI does: each turn it sends
+  `new xxx`, the whole history and `next`, checks every answer (two new stones on empty cells,
+  one on black's first move), applies the GUI's 30 s timeout and detects six in a row and full
+  boards. Every move of our engine is recorded with its decision time, depth, expanded nodes and
+  pruned nodes, the metrics asked for by the guide.
+- **Versions.** v1–v5 are checked out from the Git tags `session-1` … `session-5` into separate
+  folders, so each is measured exactly as it was at the end of its session.
+- **Opponent.** Cloudict, the reference engine of the GUI. The level is the GUI's "Low" (`depth
+  4`): our engine gets 4 s per move and Cloudict searches to depth 4.
+- **Games run in parallel** (four at a time, one per physical core).
+
+### 4.2 Test battery: forced wins and defences against Cloudict
+
+The guide asks for positions with forced wins in 1, 2 and 3 turns and for defences against
+threats in 1, 2 and 3 turns, played against Cloudict. Twelve positions were built
+(`experiments/positions.py`), one with each colour for each case, and every one was
+**certified** with the threat-space prover: each attack is a forced win in *exactly* the stated
+number of turns (forced within it and not within one turn fewer); in each defence position the
+opponent really threatens such a win and a defence exists. Wins in 3 were found by an automatic
+search over random positions.
+
+Each engine then played every position against Cloudict. An attack succeeds if the engine wins
+within the proven number of turns; a defence succeeds if Cloudict has not won after the
+threatened number of turns plus one.
+
+![Test battery](images/battery.png)
+
+*Figure 2: positions solved by each version against Cloudict (6 attacks, 6 defences).*
+
+| Version | Attacks (of 6) | Defences (of 6) | First move: time | Depth | Nodes | Pruned |
+|---|---|---|---|---|---|---|
+| v1 | 0 | 0 | 1.47 s | 2 (fixed) | 2,070 | 0 |
+| v2 | 6 | 6 | 0.07 s | 2 (fixed) | 216 | 1,780 |
+| v3 | 6 | 6 | 0.15 s | 2 (fixed) | 142 | 868 |
+| v4 | 6 | 5 | 0.96 s | 2.6 | 1,177 | 910 |
+| v5 | 6 | 6 | 1.02 s | 2.5 | 1,293 | 993 |
+
+The naive engine fails everything: its candidate cells (the closest to any stone) do not even
+contain the decisive moves. From v2 on, the threat-ranked moves and the evaluation of live sets
+solve all the tactics; v2 and v3 answer in a fraction of a second because these positions are
+won or lost quickly at depth 2. v4 lost one defence two turns after a correct first move, which
+led to the threat-space search of v5 (Section 3.6); v5 solves all 12.
+
+### 4.3 Decision time, expanded and pruned nodes per version
+
+The moves of the round-robin tournament (Section 4.4) give the search metrics of each version in
+real games (book moves, which involve no search, are excluded):
+
+![Metrics per version](images/version_metrics.png)
+
+*Figure 3: mean decision time, depth, expanded nodes and pruned nodes per move.*
+
+| Version | Moves | Mean time | Max time | Depth | Expanded nodes | Pruned nodes |
+|---|---|---|---|---|---|---|
+| v1 | 57 | 1.37 s | 2.03 s | 2 (fixed) | 1,928 | 0 |
+| v2 | 315 | 0.11 s | 0.36 s | 2 (fixed) | 316 | 1,690 |
+| v3 | 341 | 0.19 s | 0.80 s | 2 (fixed) | 207 | 1,367 |
+| v4 | 168 | 1.45 s | 3.25 s | 3.1 | 1,374 | 2,023 |
+| v5 | 261 | 1.65 s | 3.14 s | 3.4 | 1,680 | 2,651 |
+
+The figures show the evolution of the search. Minimax (v1) expands every node of the depth-2
+tree and prunes none. Alpha-beta with good move ordering (v2) needs **6 times fewer nodes** and 12
+times less time for the same depth, pruning about 1,700 moves per decision. The threat logic of
+v3 reduces the nodes further, because forced positions have few candidates. v4 and v5 use the
+time limit instead of a fixed depth: they spend about 1.5 s per move (well within 4 s; the
+longest move took 3.3 s) to reach depth 3.1 (v4) and 3.4 (v5) on average, and deeper in forced lines. (v5 is measured in the final tournament of Section 4.4.)
+
+
+### 4.4 Tournaments between versions and against Cloudict
+
+**Round robin of the session versions.** v1–v4 and Cloudict played each other from two starting
+positions (the empty board, and black's centre stone answered by `JK KJ`), each pair twice per
+position with the colours swapped: 40 games, scored 2 points per win and 1 per draw.
+
+![Round robin](images/tournament.png)
+
+*Figure 4: share of the available points in the round robin of v1–v4 and Cloudict.*
+
+| | v1 | v2 | v3 | v4 | Cloudict | Points |
+|---|---|---|---|---|---|---|
+| **v1** | | 0-0-4 | 0-0-4 | 0-0-4 | 0-0-4 | 0 % |
+| **v2** | 4-0-0 | | 1-2-1 | 0-0-4 | 0-0-4 | 38 % |
+| **v3** | 4-0-0 | 1-2-1 | | 1-0-3 | 2-0-2 | 56 % |
+| **v4** | 4-0-0 | 4-0-0 | 3-0-1 | | 0-0-4 | 69 % |
+| **Cloudict** | 4-0-0 | 4-0-0 | 2-0-2 | 4-0-0 | | 88 % |
+
+*Wins-draws-losses of the row engine against the column engine.*
+
+Each session's version beats the previous ones: v2 beats v1 4–0, v3 and v2 are close (one win
+each and two full-board draws, which shows that the hand-tuned evaluation of v3 was not yet
+better than v2's), and v4 beats v2 4–0 and v3 3–1. Cloudict, a compiled C engine with its own
+"victory by continuous four" threat search, remains the strongest. v3's two wins against it
+came from the same opening line, in which Cloudict answered badly as white at depth 4; both
+engines are deterministic, so this is one exploitable line rather than general strength.
+
+**Final version.** v5 (threat-space search) played v4 and Cloudict from four starting positions
+(the empty board and three usual white replies to the centre stone), twice each:
+
+| | v4 | v5 | Cloudict | Points |
+|---|---|---|---|---|
+| **v4** | | 1-1-6 | 0-0-8 | 9 % |
+| **v5** | 6-1-1 | | 0-0-8 | 41 % |
+| **Cloudict** | 8-0-0 | 8-0-0 | | 100 % |
+
+The threat-space search makes v5 clearly stronger than v4: **6 wins, 1 draw and 1 loss** (score
+0.81). Against Cloudict both versions lost all 8 games; v5 resisted longer (19.5 turns on average
+against 17.8 for v4). Cloudict searches much deeper (it is compiled C code with its own threat
+search), so at this level it sees the decisive attacks earlier than our engine can in Python.
+
+### 4.5 Impact of the parameters
+
+Section 6 of the statement asks to assess the impact of the parameters, heuristics and
+optimisations on playing strength and speed. Three kinds of measurements were made
+(`experiments/sweeps.py`, on the v4 search) plus the matches run while developing.
+
+**Time limit.** The 12 certified positions were searched with limits from 0.5 to 8 s:
+
+![Time limit](images/time_limit.png)
+
+*Figure 5: mean depth, expanded nodes and correct first moves on the 12 certified positions.*
+
+| Time limit | 0.5 s | 1 s | 2 s | 4 s | 8 s |
+|---|---|---|---|---|---|
+| Mean depth | 1.6 | 1.9 | 2.4 | 2.7 | 2.8 |
+| Mean expanded nodes | 146 | 315 | 822 | 1,304 | 1,926 |
+| Correct decisions (of 12) | 11 | 11 | 12 | 12 | 12 |
+
+Depth grows slowly with time, because each extra ply multiplies the work by roughly the
+branching factor, and many of these positions end the search early with a proven result. Below
+2 s one tactical position goes wrong; from 2 s on all are solved. The GUI's levels (4–6 s) are
+therefore comfortable.
+
+**Duels: one setting changed.** Each non-default setting played 12 games (6 openings, both
+colours, 1 s per move, adjudicated as a draw after 60 turns) against the default engine:
+
+![Duels](images/duels.png)
+
+*Figure 6: score of each setting against the default engine (0.5 = equal strength).*
+
+| Setting (default) | Changed to | Score | Wins / draws / losses |
+|---|---|---|---|
+| Branching N (10) | 5 | 0.50 | 3 / 6 / 3 |
+| Branching N (10) | 20 | 0.46 | 3 / 5 / 4 |
+| Transposition table (on) | off | 0.50 | 3 / 6 / 3 |
+| Quiescence plies (0) | 2 | 0.17 | 1 / 2 / 9 |
+| Quiescence plies (0) | 4 | 0.04 | 0 / 1 / 11 |
+| Weights (evolved) | hand-tuned | 0.42 | 2 / 6 / 4 |
+
+**Decisions with each setting** (12 certified positions, 4 s):
+
+| Setting | Correct | Mean depth | Mean nodes | Mean pruned |
+|---|---|---|---|---|
+| branching 5 / 10 / 20 | 12 / 12 / 12 | 2.8 / 2.6 / 2.5 | 1,003 / 1,177 / 1,678 | 566 / 910 / 2,301 |
+| transposition table off / on | 12 / 12 | 2.6 / 2.6 | 1,191 / 1,177 | 952 / 910 |
+| quiescence 0 / 2 / 4 | 12 / 12 / 12 | 2.6 / 2.4 / 2.5 | 1,177 / 1,654 / 1,915 | 910 / 2,684 / 2,800 |
+| weights hand-tuned / evolved | 12 / 12 | 2.8 / 2.8 | 1,123 / 1,655 | 1,134 / 1,983 |
+
+**Matches run during development** (8 games each from 4 openings, both colours, 2 s per move
+unless stated):
+
+| Change | Result for the change | Decision |
+|---|---|---|
+| Enhanced evaluation (v2) vs naive evaluation | 5 W, 0 L, 3 D (depth 2) | kept |
+| Forward pruning (N = 10) vs no pruning | 5 W, 2 L, 1 D | kept |
+| Quiescence 4 plies vs none | 0 W, 8 L | rejected |
+| Quiescence 2 plies vs none | 0 W, 6 L (stopped) | rejected |
+| Forced defences unpruned vs pruned | 2 W, 0 L, 2 D (stopped) | kept |
+| Evolved vs hand-tuned weights (depth 2, 24 games) | score 0.73 | kept |
+
+Conclusions on the parameters:
+
+- **Forward pruning** is essential to reach depth with 66 candidate moves per node, and N = 10 is
+  a good compromise: N = 5 is as strong in games but searches fewer alternatives, and N = 20
+  spends its time on weak moves (more nodes, less depth, slightly weaker).
+- **The transposition table** brings little inside one search (the same results with 1 % fewer
+  nodes on these positions, equal strength in duels), because with only 10 moves per node few
+  transpositions are reached. It costs little memory (Section 4.6) and is kept for move ordering
+  and reuse between turns.
+- **Quiescence search** is clearly harmful in this engine (Section 3.5.5), so it is disabled.
+- **The evolved weights** beat the hand-tuned ones both with the training search (0.73) and in
+  the full engine (0.58 = 1 − 0.42), so the machine learning step improved the engine.
+
+### 4.6 Memory and CPU
+
+Memory was measured with `tracemalloc` while searching the 12 certified positions to depth 4 with
+one engine. Without the transposition table, the search allocates at most 0.1 MiB; with it, the
+peak is 0.8 MiB for 3,499 entries, about 210 bytes per entry. The bound of 200,000 entries
+therefore limits the table to about 40 MB, a small amount for any machine, and the rest of the
+engine (board, windows, book) takes well under 1 MB. The engine uses a single core; at the GUI's
+"Low" level it spent 1.5 s per move on average and never more than 3.3 s. The full test battery
+of v5 needs no more CPU than v4 (about 1 s for the first move).
+
+### 4.7 The engine in the GUI
+
+The executable built with PyInstaller (`pyinstaller --onefile --name mbo main.py`) was loaded in
+ConnectMore, which shows the name `Mbo` returned by the `name` command, and played Cloudict at
+the "Low" level. The figures are screenshots of that game.
+
+![GUI after 6 turns](images/gui_turn6.png)
+
+*Figure 7: the engine (black) against Cloudict (white) in the course GUI after 6 turns.*
+
+![GUI at the end](images/gui_final.png)
+
+*Figure 8: end of the game; in this game Cloudict completed a vertical line.*
+
+### 4.8 Strengths and weaknesses
+
+**Strengths.** The engine always answers legally and within the time (no move exceeded 82 % of
+the limit in any test), plays both colours from any position, never misses a win in one move or
+an immediate defence, finds forced wins of up to three turns through threat-space search, and
+each development stage measurably improved it (v1 → v5).
+
+**Weaknesses.** Python limits the full-width search to about 3 plies in 4 s, so strategic
+mistakes whose consequences appear after more than three turns are not seen; Cloudict, written
+in C, searches far more nodes. The evaluation counts windows independently and has no notion of
+shapes formed by several lines; the opening book covers only the first two turns; and the
+safety check looks only two turns ahead.
+
+## 5. Conclusions
+
+This practice produced `mbo`, a Connect6 engine that follows the course interface, plays both
+colours from any position within the time given by `depth`, and was developed and measured in
+five stages. The main conclusions are:
+
+1. **Knowledge of threats matters more than raw search.** The jump from v1 to v2 (from 0 to 12
+   of the 12 tactical positions, and from 0 % to 38 % in the round robin) came from proposing only
+   the cells of live windows, ranked by the severity of the threats, not from searching deeper.
+   Wu and Huang's definition of threats (the stones the opponent needs to block them) runs
+   through the whole engine: in the evaluation (`opp_blockers`), in the move proposal (wins and
+   forced defences), and in the threat-space search.
+2. **Alpha-beta and incremental data structures make the search possible in Python.**
+   Alpha-beta gave the same moves as Minimax with 67 % fewer nodes, and the incremental board
+   made each search 6 times faster. Forward pruning (N = 10) was necessary to reach depth 3–6 in a
+   few seconds with 66 candidate moves per node.
+3. **Learning the weights was better than setting them by hand.** Hand-tuning the seven weights
+   needed many slow, noisy games; the genetic algorithm, with individuals competing against each
+   other, found weights that beat the hand-tuned ones (0.73 at depth 2, 0.58 in the full engine)
+   and that are interpretable (sets of two and three stones count more, the blocker penalty is
+   halved because the search already handles forced defences).
+4. **Not every textbook optimisation pays off.** Quiescence search lost almost every game: in
+   Python, the time it spends on extensions is worth more as one more ply of the main search,
+   and the evaluation already accounts for pending threats. The transposition table brought
+   little inside a single search because forward pruning leaves few transpositions. Measuring
+   each option, rather than assuming its benefit, decided what the final engine uses.
+5. **Testing found the last improvement.** The certified test battery exposed a defence that v4
+   lost two turns after a correct first move. A threat-space search, the technique used by the
+   strongest Connect6 programs, fixed it and made v5 the strongest of our versions.
+
+Cloudict, a compiled engine with its own threat search, remained stronger in most games. The
+clearest ways to close the gap would be a faster implementation of the board (NumPy or a
+compiled extension) to search deeper, a deeper threat-space search (relevance zones [4]) for
+both attack and defence, an evaluation that recognises combinations of lines, a larger opening
+book computed offline, and tuning the search parameters (N, time shares) with the same genetic
+algorithm, as Unit 4 suggests.
+
+## References
+
+1. I-C. Wu, D-Y. Huang and H-C. Chang, "Connect6", *ICGA Journal*, vol. 28, no. 4, 2005.
+2. I-C. Wu and D-Y. Huang, "A New Family of k-in-a-row Games", *Advances in Computer Games
+   (ACG 2005)*, LNCS 4250, Springer, 2006, pp. 180–194.
+3. L. V. Allis, H. J. van den Herik and M. P. H. Huntjens, "Go-Moku Solved by New Search
+   Techniques", *Computational Intelligence*, vol. 12, no. 1, 1996, pp. 7–23.
+4. I-C. Wu and P-H. Lin, "Relevance-Zone-Oriented Proof Search for Connect6", *IEEE Transactions
+   on Computational Intelligence and AI in Games*, vol. 2, no. 3, 2010, pp. 191–207.
+5. L. Li, *Cloudict* (Connect6 engine) and *ConnectMore* (GUI): <https://github.com/lang010/cloudict>
+6. O. David-Tabibi, M. Koppel and N. S. Netanyahu, "Genetic Algorithms for Mentor-Assisted
+   Evaluation Function Optimization", *Proceedings of GECCO 2008*, ACM, 2008, pp. 1469–1476.
+7. D. E. Knuth and R. W. Moore, "An Analysis of Alpha-Beta Pruning", *Artificial Intelligence*,
+   vol. 6, no. 4, 1975, pp. 293–326.
+8. A. L. Zobrist, "A New Hashing Method with Application for Game Playing", Technical Report 88,
+   University of Wisconsin, 1970.
+9. J. Schaeffer, "The History Heuristic and Alpha-Beta Search Enhancements in Practice", *IEEE
+   Transactions on Pattern Analysis and Machine Intelligence*, vol. 11, no. 11, 1989,
+   pp. 1203–1212.
+10. C. B. Browne et al., "A Survey of Monte Carlo Tree Search Methods", *IEEE Transactions on
+    Computational Intelligence and AI in Games*, vol. 4, no. 1, 2012, pp. 1–43.
+11. S. Russell and P. Norvig, *Artificial Intelligence: A Modern Approach*, 4th ed., Pearson,
+    2020.
+12. Course materials: Units 3.1–3.3 (state space search, adversarial search, optimisations in
+    adversarial search) and Unit 4 (genetic algorithms); the Practice 1 statement and guide; the
+    template engine and GUI: <https://github.com/felixem/Connect6Engine>,
+    <https://github.com/felixem/Connect6GUI>
+
+## Appendix: running the engine
+
+```bash
+cd engine
+python main.py                                   # text protocol on stdin/stdout
+pyinstaller --onefile --name mbo main.py         # executable for the GUI: engine/dist/mbo.exe
+```
+
+A session with the engine (our input after `>`; `info` lines are search statistics):
+
+```text
+> name
+name mbo
+> depth 4
+> new xxx
+> black JJJJ
+> next
+info time 0.000 book
+move IJJI
+> new xxx
+> black JJJJ
+> white IJJI
+> black HHKK
+> white LLLK
+> next
+info time 3.006 depth 3 nodes 3335 pruned 8383 score 183.5
+move IHKH
+```
