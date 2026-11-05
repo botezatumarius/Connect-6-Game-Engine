@@ -1,0 +1,4 @@
+# The engine uses only the standard library. Tools for building, experiments and the report:
+pyinstaller
+matplotlib
+markdown
