@@ -1,9 +1,9 @@
-# Practice 1: Connect 6 Game Engine — Project Report
+# Connect 6 Game Engine — Project Report
 
 **Course:** Techniques in Artificial Intelligence, MSc in Artificial Intelligence, University of Alicante  
 **Author:** Marius Botezatu (practice group 1, worked alone)  
 **Engine name:** `mbo`  
-**Date:** 8 November 2026  
+**Date:** 6 November 2026  
 **Repository:** <https://github.com/botezatumarius/Connect-6-Game-Engine>
 
 ## 1. Introduction
@@ -38,56 +38,84 @@ Section 4 presents the experiments of session 5, and Section 5 concludes.
 
 ### 2.1 Connect6 and its complexity
 
-Connect6 was introduced by I-Chen Wu in 2005 as a member of the family of *k-in-a-row* games
+This review is based on the two documents suggested in Moodle, Wu and Huang's paper that
+introduced the game [2] and Liu and Lin's work on defence and threat-space search [13, 14],
+together with the references they cite.
+
+Wu and Huang introduced Connect6 in 2005 as a member of the family of *k-in-a-row* games
 Connect(m, n, k, p, q): an m×n board, k stones in a row to win, p stones per move and q stones on
-the first move [1, 2]. Connect6 is Connect(19, 19, 6, 2, 1). Wu showed why the two-stone rule
-makes the game fair: after every turn, the player who has just moved has exactly one stone more
-than the opponent, so neither side keeps a permanent advantage of tempo, unlike Gomoku, where the
-first player is known to win [3].
+the first move [1, 2]. Connect6 is Connect(19, 19, 6, 2, 1). They argue that p = 2q is a
+necessary condition for fairness: then, after every move, the player who has just moved has
+exactly q stones more than the other, so neither side keeps a permanent advantage of tempo,
+unlike Gomoku (Connect(15, 15, 5, 1, 1)), where the first player is known to win [3]. Since 2006
+Connect6 has been a tournament of the ICGA Computer Olympiad [13].
 
 The game is very large. Each of the 361 intersections is empty, black or white, so there are at
 most 3³⁶¹ ≈ 10¹⁷² states, the same order as Go. The branching factor is far larger than Go's:
 with about 300 empty cells, a two-stone move has about 300·299/2 ≈ 45,000 choices. A full-width
 search is therefore impossible, and every successful program restricts the moves it considers.
+Fortunately, Connect6 has **high locality** [14]: moves placed far from the stones already on
+the board ("breakaway" moves) rarely help, because they give the opponent the initiative. Wu and
+Huang showed, for instance, that if white answers black's first stone far away, black is in a
+local Connect(6, 2, 3) game, which they proved to be a first-player win [2]. Programs therefore
+consider only cells near the existing stones.
 
 ### 2.2 Threats: the central concept
 
-Strong Connect6 programs reason in terms of **threats**. Wu and Huang [2] define them precisely:
-a player has *t* threats when the opponent needs at least *t* stones to stop the player from
-winning on the next move. Because a player places two stones per turn, a window of six cells
-that holds four or five stones of one player and no opposing stone can be completed in one
-move. Consequences used throughout this engine:
+Strong Connect6 programs reason in terms of **threats**. Wu and Huang [2] define them precisely
+(their Definition 1): a player has *t* threats when the opponent needs to place *t* stones to
+stop the player from winning on the next move. Because a player places two stones per turn, a
+window of six cells that holds four or five stones of one player and no opposing stone can be
+completed in one move. Consequences used throughout this engine:
 
 - One threat (or two) can be answered: the defender uses one (or both) of its stones to block.
 - **Three or more threats cannot be answered with two stones: the attacker wins.**
 - A move creating two threats forces the opponent to spend its whole turn defending, so the
   attacker keeps the initiative. Chaining such moves until three threats appear is the basis of
-  *threat-space search* [3, 4], called "victory by continuous double threat" in Connect6.
+  *threat-space search* [3, 13], called "victory by continuous double threat" in Connect6.
 
-Allis et al. [3] introduced threat-space search to solve Gomoku. Wu and Lin [4] adapted proof
-search to Connect6 with *relevance zones*, the regions where the defender's stones can affect an
-attack. The ConnectMore GUI used in this practice comes with Cloudict [5], an alpha-beta engine
-with a "victory by continuous four" (VCF) threat search, which serves as our reference opponent.
+To count threats on one line, Wu and Huang slide a window of six cells along it; each window with
+at least four of the player's stones, no opposing stone and no square marked yet adds one threat
+and marks its rightmost empty square. They prove that this greedy count is exact for a line and
+that one stone adds at most two threats to a line. They also name the patterns that become
+threats with one more move: a line has a *live-l* (*dead-l*) threat if adding 4 − l stones
+creates two threats (one threat), e.g. live-3, dead-3, live-2 and dead-2. These matter because a
+two-stone move can turn them into real threats.
+
+Allis et al. [3] introduced threat-space search to solve Gomoku, and Wu and Huang proposed its
+Connect6 version, which became the basis of Connect6 programs [13]. Wu and Lin [4] later adapted
+proof search to Connect6 with *relevance zones*, the regions where the defender's stones can
+affect an attack. The ConnectMore GUI used in this practice comes with Cloudict [5], an
+alpha-beta engine with a "victory by continuous four" (VCF) threat search, which serves as our
+reference opponent.
 
 ### 2.3 Evaluation of Connect6 positions
 
 Since the search cannot reach the end of the game, positions are scored statically. The usual
-approach counts **windows** (or *lines*): every segment of six consecutive cells is a possible
-winning line. A window containing stones of only one player is *live* for that player, and a
-window with stones of both players is *dead*. Programs weight live windows by the number of
-stones they contain, often exponentially, because a window with more stones is closer to six;
-names such as "live three" or "dead four" describe the same idea for groups of stones. The guide
-of this practice asks for the same two aspects: the size of each live set and the number of
-stones the opponent needs to kill it.
+approach counts **windows** (Liu and Lin call them *potential lines*): every segment of six
+consecutive cells is a possible winning line. A window containing stones of only one player is
+*live* for that player, and a window with stones of both players is *dead*. Most programs are
+pattern-based [13]: they assign a score to each configuration of stones on a line (the live and
+dead threats above), often growing exponentially with the number of stones, and add the scores of
+the four directions. The guide of this practice asks for the same two aspects: the size of each
+live set and the number of stones the opponent needs to kill it.
 
-The weights of such a linear evaluation function, Σ wᵢ·fᵢ(s), are difficult to set by hand
-(Unit 3.3). Machine learning can set them instead: evolutionary methods [6] (Unit 4), regression
-on game outcomes, or, in recent programs, neural networks trained by reinforcement learning.
+Liu and Lin [13, 14] propose a more strategic scheme based on the *influence* of a stone: every
+potential line through a stone (at most 11 cells in each of the four directions, cut by the
+border or an opposing stone) gains value, stones closer to it weigh more than distant ones and
+empty cells also have a small weight. Values along a line are multiplied (connectivity) and the
+four directions are added (liberty). Two moves that create the same threat pattern can then be
+told apart by the space around them.
+
+The weights of a linear evaluation function, Σ wᵢ·fᵢ(s), are difficult to set by hand (Unit
+3.3); Liu and Lin, for example, tuned theirs by experiment and experience. Machine learning can
+set them instead: evolutionary methods [6] (Unit 4), regression on game outcomes, or, in recent
+programs, neural networks trained by reinforcement learning.
 
 ### 2.4 Search algorithms and optimisations
 
 Minimax and its pruned version, alpha-beta [7], are the classical algorithms for two-player,
-zero-sum games with perfect information (Unit 3.2). Alpha-beta returns the Minimax value while
+zero-sum games with perfect information [11] (Unit 3.2 [12]). Alpha-beta returns the Minimax value while
 examining far fewer nodes; its efficiency depends on the order in which moves are tried. The
 optimisations of Unit 3.3 address the real-time constraint of game engines:
 
@@ -106,18 +134,60 @@ Monte-Carlo Tree Search [10] has also been applied to k-in-a-row games, but rand
 weak at the precise tactics (threats) that decide Connect6, so the strongest programs combine
 search with threat-based knowledge.
 
+### 2.5 Defence verified by threat-space search
+
+Liu and Lin [13, 14] built a strong program, Kagami (fourth at the 14th Computer Olympiad, 2009),
+around a defensive idea. A greedy defensive strategy, without search, considers only the cells of
+the 5×5 squares around the opponent's last two stones and plays the best ones by the influence
+evaluation; it drew all 10 games against NCTU6 (level 3) and 6 of 10 against X6, both Olympiad
+champions. Its weakness, a defence that fails against a threat sequence, was removed by using
+threat-space search as a **verifier**: if the chosen defensive move still lets the opponent win
+by threats, the next moves of the list are tried until one holds, and a winning threat sequence
+of our own, when found, is played at once. With this combination it drew all 10 games against X6
+and beat MeinStein (silver medallist) 6–4. To keep the search cheap they use *conservative
+defence* (all the defending stones of a threat are placed at once, which turns the search into a
+single-agent search but can miss some wins) and a table of precomputed line patterns.
+
 ## 3. Development
 
-### 3.1 Starting point, interface and architecture
+This section follows the practice guide item by item. For every item it states what the guide
+asks for, what was implemented and where (module and function), how it works, why it was done
+that way, and how it was checked. Table 1 maps the items to the code.
 
-The engine started from the course template (`Connect6Engine`), kept its structure (`main.py`,
-`game_engine.py`, `search_engine.py`, `defines.py`, `tools.py`) and added one module per
-responsibility:
+| Session | Guide item | Implementation | Section |
+|---|---|---|---|
+| 1 | End of the game | `rules.py` (v1); `Board.put()`, `Board.is_full()` (final) | 3.2.1 |
+| 1 | Naive proposal of next moves | `move_generator.candidate_cells()` (v1) | 3.2.2 |
+| 1 | Naive static evaluation | `evaluation.count_living_sets()` (v1) | 3.2.3 |
+| 1 | Naive search tree (Minimax) | `SearchEngine.minimax()` (v1) | 3.2.4 |
+| 1 | API of the engine | `game_engine.py`, `tools.py` | 3.2.5 |
+| 2 | Alpha-beta pruning | `SearchEngine.alpha_beta()` (v2), `negamax()` (final) | 3.3.1 |
+| 2 | (support) Incremental board | `board.py` | 3.3.2 |
+| 2 | Improved next-moves proposal | `move_generator.rank_cells()` | 3.3.3 |
+| 2 | Enhanced static evaluation | `Board.blockers()`, `evaluation.py` (v2) | 3.3.4 |
+| 3 | Review of the state of the art | Section 2 | 3.4.1 |
+| 3 | Detection of imminent threats | `move_generator.generate_moves()` | 3.4.2 |
+| 3 | Our own evaluation function | `evaluation.features()`, `evaluate()` | 3.4.3 |
+| 4 | Weights optimised by machine learning | `training/genetic.py` | 3.5.1 |
+| 4 | Answer within the time received | `SearchEngine.search()` | 3.5.2 |
+| 4 | Forward pruning | `move_generator.rank_moves()`, `negamax()` | 3.5.3 |
+| 4 | Transposition table, historical heuristics | `negamax()`, `Board.hash` | 3.5.4 |
+| 4 | Quiescence search | `negamax()` | 3.5.5 |
+| 4 | Opening book (with symmetries) | `opening_book.py`, `training/build_book.py` | 3.5.6 |
+| 5 | Tests, and the improvement they led to | `threat_search.py`, `experiments/` | 3.6, 4 |
+
+*Table 1: guide items and where they are implemented (v1 = code of session 1, later replaced).*
+
+### 3.1 Starting point and architecture
+
+The engine started from the course template (`Connect6Engine`). Its structure was kept (`main.py`,
+`game_engine.py`, `search_engine.py`, `defines.py`, `tools.py`) and one module was added per
+responsibility, so that each later session could replace one part without touching the others:
 
 | Module | Responsibility |
 |---|---|
 | `main.py` | Entry point (also the PyInstaller target). |
-| `game_engine.py` | Text protocol: reads commands, keeps the game, prints the answer. |
+| `game_engine.py` | Text protocol: reads commands, keeps the game, prints the answers. |
 | `board.py` | Board, rules (win and draw), incremental window statistics, Zobrist hash. |
 | `move_generator.py` | Candidate moves: wins, forced defences, ranked candidates. |
 | `evaluation.py` | Weighted evaluation function and its features. |
@@ -127,139 +197,436 @@ responsibility:
 | `tools.py`, `defines.py` | Move notation, printing, logging; constants. |
 
 Each module depends only on the ones below it (`game_engine` → `search_engine` →
-`move_generator`/`evaluation`/`threat_search` → `board` → `defines`), so each part could be
-replaced in a later session without touching the others.
-
-
-**Protocol.** `game_engine.py` implements the 13 commands of the statement with a table that maps
-each command to its handler (`vcf`, `unvcf` and unknown commands are ignored, as required). Two
-details of the GUI decided the design:
-
-- Every turn the GUI sends `new xxx`, the *whole* history (`black JJJJ`, `white ASBS`, …) and
-  `next`. The engine therefore never assumes a colour: after any sequence of `black`/`white`
-  commands, the side to move is the opponent of the last colour placed, so the engine plays
-  both colours from any position. `move XXXX` places the opponent's stones for the side to move
-  and answers; `new black` plays the first move at once.
-- `depth d` is used as the time limit: *d* seconds per turn (the GUI levels Low, Medium, High
-  send 4, 5 and 6). The limit is capped at 25 s because the GUI forfeits a move after 30 s.
-
-Coordinates follow the GUI: the first letter of a cell is its row and the second its column. The
-template printed single-stone moves with the letters swapped, which we fixed. Every answer is
-flushed immediately, because the GUI reads through a pipe.
+`move_generator`/`evaluation`/`threat_search` → `board` → `defines`). All the tunable values
+(time shares, branching, table size…) are named constants in `defines.py`, and the search takes
+its parameters in its constructor (`SearchEngine(weights, branching, table, quiescence)`), which
+is what allowed the genetic algorithm and the experiments to run the same code with different
+settings.
 
 ### 3.2 Session 1: a first functional engine
 
-**End of the game.** The first version checked, after each move, the four lines through each of
-its (one or two) stones, counting equal stones in both directions; six or more is a win (the
-rule says "6 or more", so longer lines win too). Only the last move can create a new line, so
-nothing else needs checking. A full board without a winner is a draw. The template's version
-returned "no win" as soon as the first stone's cell was empty, without checking the second
-stone; ours fixed that.
+#### 3.2.1 Detecting the end of the game
 
-**Naive move proposal.** Candidates are empty cells, as the guide suggests, limited to avoid the
-combinatorial explosion: the 10 empty cells closest (Chebyshev distance ≤ 2) to existing stones,
-paired into at most 45 two-stone moves instead of ≈ 45,000. Black's opening move is a single
-stone in the centre.
+*Requirement.* Detect whether the last move completed a row, column or diagonal of six stones of
+one colour, and whether the board is full (a draw).
 
-**Naive evaluation.** A finished game scores MAX (black wins), 0 (draw) or MIN (white wins).
-Otherwise the score is the number of *living sets* of Black minus those of White, a living set
-being a window of six cells containing stones of one colour only. An efficient implementation
-splits every line at the opponent's stones: a segment of length L contains L − 5 windows without
-opposing stones. The empty windows appear in both counts and cancel, so the difference is
-exact. It was checked against a brute-force count on 300 random boards.
+*Implementation (v1, `rules.py`).* The template's board is a 21×21 grid: the 19×19 board plus a
+ring of `BORDER` cells. `count_run(board, x, y, dx, dy, color)` walks from a stone in one
+direction while the cells hold the same colour; `is_winning_stone()` adds the runs of both
+directions of each of the four axes (horizontal, vertical, two diagonals) plus the stone itself;
+`is_win_by_premove()` applies it to the one or two stones of the last move;
+`is_board_full()` looks for an empty cell in each row; and `get_game_result()` combines them
+into `ONGOING`, `BLACK_WIN`, `WHITE_WIN` or `DRAW` (an enum whose win values equal the winner's
+colour, so the winner is read directly from the stone).
 
-**Minimax.** A fixed-depth (2 plies: our move and the reply) Minimax, Black maximising. At the
-leaves, or when the game is over, the static evaluation is returned. It was checked against an
-independently written Minimax on 15 random positions (identical values).
+*Why.* Only the last move can create a new line, because an earlier line would already have ended
+the game, so checking its two stones is enough: a few steps instead of a scan of the board. The
+border ring stops every walk without bounds checks. The rule says "six *or more*", so a line of
+seven also wins. The template's version returned "no win" as soon as the first stone's cell was
+empty, without checking the second stone; ours fixed that.
 
-**Limitations found.** The naive engine lost to Cloudict in 8 turns. Tactical tests showed why:
+*Final version.* From session 2 the incremental board (3.3.2) knows how many stones of each
+colour every six-cell window holds, so a win is detected when a window reaches six stones of one
+colour (`Board.put()` sets `winner`), and a draw when the stone counter reaches 361
+(`Board.is_full()`).
+
+*Verification.* Ten hand-built cases: six in each of the four directions, five at the board edge
+(no win), a win made by the second stone of a move, two groups joined into seven, a line broken
+by an opponent stone, a full board without lines (draw) and an empty board.
+
+#### 3.2.2 Naive proposal of next moves
+
+*Requirement.* Propose the moves to explore; in the basic form the empty cells, limited to a
+fixed number to avoid the combinatorial explosion.
+
+*Implementation (v1, `move_generator.py`).* `candidate_cells()` visits every stone and records,
+for each empty cell at Chebyshev distance ≤ 2 from it, its distance to the nearest stone. It keeps
+the 10 nearest cells (`MAX_CANDIDATE_CELLS`) and `generate_moves()` pairs them with
+`itertools.combinations`: at most 10·9/2 = 45 two-stone moves, instead of about 45,000 pairs of
+empty cells. On an empty board the only move is black's single stone in the centre; if fewer than
+two cells are near a stone (an almost full board), every empty cell is used, so a legal move
+always exists.
+
+*Why.* A move far from all stones almost never matters in Connect6 (its locality, Section 2.1),
+so the empty cells near the stones are the natural "limited" set. Starting from the stones
+(at most 25 cells each) is cheaper than measuring every empty cell against every stone.
+
+*Verification.* Empty board → `JJ`; one centre stone → 45 distinct moves on empty cells within
+distance 2; stones in the corners → no access outside the board; a full board with two far
+empty cells → exactly that pair. It took 0.2–0.3 ms per call.
+
+#### 3.2.3 Naive static evaluation
+
+*Requirement.* Use the end-of-game function to return MAX (first player wins), 0 (draw) or MIN
+(second player wins); otherwise a score proportional to the first player's advantage, for
+example the number of sets of living stones.
+
+*Implementation (v1, `evaluation.py`).* A finished game returns `MAXINT` (+20,000), 0 or
+`MININT` (−20,000). Otherwise the score is the number of Black's *living sets* minus White's,
+a living set being a window of six cells holding stones of only one colour. All 92 lines of the
+board that are at least six cells long (rows, columns and diagonals) are computed once. At each
+evaluation the board is flattened to bytes and each line is read with one `operator.itemgetter`
+call, and its windows are counted by splitting it at the opponent's stones:
+
+```python
+def open_windows(line, blocker):
+    """Count the windows of `line` with no `blocker` stone."""
+    return sum(max(0, len(segment) - Defines.WIN_LENGTH + 1) for segment in line.split(blocker))
+
+
+def count_living_sets(board):
+    """Black's living sets minus White's (empty windows cancel out)."""
+    flat = bytes(chain.from_iterable(board))
+    score = 0
+    for get_line in LINE_GETTERS:
+        line = bytes(get_line(flat))
+        score += open_windows(line, WHITE_STONE) - open_windows(line, BLACK_STONE)
+    return score
+```
+
+*Why.* A segment of length L between opposing stones contains L − 5 windows without them. Windows
+without white are Black's living sets plus the *empty* windows; windows without black are White's
+plus the same empty windows, which therefore cancel in the difference. The splitting runs in C
+(`bytes.split`), about twice as fast as sliding a window cell by cell (measured 0.26–0.30 ms
+against 0.60–0.66 ms). Scores stay far from MAX/MIN, since there are only 924 windows.
+
+*Verification.* Compared with a brute-force count of every window on 300 random boards: no
+difference. One black stone in the centre scores +24, the number of windows through that cell.
+
+#### 3.2.4 Naive search tree: Minimax
+
+*Requirement.* Minimax without pruning, with a fixed depth at which the static evaluation is
+returned.
+
+*Implementation (v1, `search_engine.py`).* `best_for(color)` returns Python's `max` for Black and
+`min` for White, so one recursive method serves both players:
+
+```python
+def score_move(self, move, depth, color):
+    """Minimax value of playing `move` for `color`."""
+    make_move(self.m_board, move, color)
+    score = self.minimax(depth - 1, opponent(color), move)
+    unmake_move(self.m_board, move)
+    return score
+
+def minimax(self, depth, color, preMove):
+    """Minimax value of the position after `preMove`, with `color` to move."""
+    self.m_total_nodes += 1
+    if depth == 0 or get_game_result(self.m_board, preMove) != GameResult.ONGOING:
+        return evaluate(self.m_board, preMove)
+    return best_for(color)(self.score_move(move, depth, color)
+                           for move in generate_moves(self.m_board))
+```
+
+The root scores every candidate the same way and plays the best one for its colour (the
+highest score for Black, the lowest for White). The depth is 2 plies: our move and the reply.
+
+*Why.* Black is MAX and White is MIN because the evaluation is from Black's point of view, as
+the guide specifies. Moves are made and undone on one copy of the board instead of copying it
+at every node. Depth 2 (≈ 2,000 positions) answered in about 0.5 s; depth 3 would need ≈ 91,000.
+
+*Verification.* Compared with an independently written Minimax on 15 random positions: identical
+values.
+
+#### 3.2.5 API of the engine
+
+*Requirement.* The commands of the template and the statement, so that the GUI can drive the
+engine.
+
+*Implementation (`game_engine.py`, `tools.py`).* `GameEngine.run()` reads one line at a time,
+writes it to `mbo-engine.log`, splits it into command and argument, and calls the handler of the
+command from a table (`m_commands`); `exit`/`quit` end the loop, and `vcf`, `unvcf` and unknown
+commands have no handler, so they are ignored as required. After each command the output is
+flushed, because the GUI reads through a pipe.
+
+| Command | Handler and behaviour |
+|---|---|
+| `name` | `on_name()` prints `name mbo` (the name assigned by the professor, `Defines.ENGINE_NAME`). The GUI waits for this line when it loads the engine and shows "Mbo". |
+| `print` | `print_board()`: the board with X (black) and O (white). |
+| `exit`, `quit` | End the program. |
+| `black XXXX`, `white XXXX` | `on_place()`: parse the cells with `msg2move()` and play them for that colour; the side to move becomes the other colour. |
+| `next` | `on_next()`: search a move for the side to move, play it, print `move XXXX`. |
+| `move XXXX` | `on_move()`: play the opponent's stones for the side to move, then do `next`. |
+| `new black` / `new white` / `new xxx` | `on_new()`: empty board, black to move; with `black` the engine plays the first move at once. |
+| `depth d` | `on_depth()`: time limit of *d* seconds per turn, capped at 25 s. |
+| `vcf`, `unvcf` | Ignored. |
+| `help` | Prints the list of commands. |
+
+Two details of the GUI shaped this design. First, every turn the GUI sends `new xxx`, the *whole*
+history (`black JJJJ`, `white ASBS`, …) and `next`: the engine therefore never assumes a colour;
+the side to move is always the opponent of the last colour placed, so it plays both colours from
+any position. Black's first move arrives as `JJJJ` (the same cell twice); `msg2move()` removes
+duplicates, so it becomes one stone. Second, `depth d` is used as the time limit, as the
+statement says: the GUI levels Low, Medium and High send 4, 5 and 6 seconds, and the cap of 25 s
+stays below the GUI's 30 s forfeit. Coordinates follow the GUI: the first letter is the row and
+the second the column. The template printed single-stone moves with the letters swapped, which we
+fixed.
+
+*Verification.* Command sequences exactly like the GUI's (empty history, black's first move,
+`new white` + `move`, `print`, unknown commands), and a whole game against Cloudict through a
+driver that behaves like the GUI.
+
+*Limitations found.* The naive engine lost to Cloudict in 8 turns. Tactical tests showed why:
 with a four on the board it did not complete it, and it did not block an opposing four. The
-search was correct (with more candidate cells it found the win), but the naive proposal ranked
-cells by distance and broke ties by board order, so the decisive cells were never offered.
-This motivated the improved move proposal of session 2.
+search was correct (with 24 candidate cells it found the win, but needed 30–40 s per move); the
+naive proposal ranked cells by distance and broke ties by board order, so the decisive cells
+were never offered. This motivated the improved proposal of session 2.
 
 ### 3.3 Session 2: alpha-beta, threat-ranked moves and a better evaluation
 
-**Alpha-beta pruning.** Built directly from the Minimax implementation: the maximising player
-raises α, the minimising player lowers β, and the remaining moves of a node are skipped as soon
-as α ≥ β. The engine counts the expanded nodes and the *pruned* moves (the siblings skipped at
-each cut-off). On 20 random positions it returned exactly the same move and score as Minimax,
-with 67 % fewer nodes and a third of the time.
+#### 3.3.1 Alpha-beta pruning
 
-**Incremental board.** The improved move proposal and evaluation need, for every one of the 924
-windows of the board, the number of black and white stones it contains. Recomputing them at
-each node would be too slow in Python, so `board.py` keeps them up to date: placing a stone
-updates only the (at most 24) windows through that cell. For each colour the board also keeps
-`lines[k]`, the number of live windows holding *k* stones, and `threats`, the set of live
-windows holding at least four stones (those the player can complete in one move). A window
-reaching six stones sets the winner, which replaces the session 1 line scan. `undo()` reverts
-a move exactly, so the search plays and undoes moves on one board instead of copying it. The
-refactor gave identical moves, scores and node counts on 27 searches, and made the search
-**6 times faster** (0.102 s → 0.017 s per search on the same positions).
+*Requirement.* Add alpha-beta pruning to the Minimax implementation.
 
-**Improved move proposal.** Following the guide, candidates are only the empty cells of live
-windows that contain stones ("around the stones that are alive", i.e. that can still form six).
-Each cell is scored by the windows that pass through it, for both colours: our windows (attack)
-and the opponent's (defence), each weighted by its *severity*, which grows four times with every
-stone (1, 4, 16, 64, 256). The 10 best cells are paired and the pairs are ordered from best to
-worst by their combined score. With this proposal the engine completed fours, blocked the
-opponent's fours, and lasted 9–12 turns against Cloudict instead of 8.
+*Implementation (v2, `SearchEngine.alpha_beta()`).* The Minimax recursion of 3.2.4 received the
+(α, β) window: α is the value MAX (Black) is already guaranteed, β the value MIN (White) is
+guaranteed. The root is the call with `ply == 0`, which records the best move:
 
-**Enhanced evaluation.** The guide asks to weight live sets by their number of stones and by the
-number of stones the opponent needs to kill them. Both are implemented:
+```python
+maximizing = color == Defines.BLACK
+moves = generate_moves(board)
+for i, move in enumerate(moves):
+    board.play(move, color)
+    score = self.alpha_beta(depth - 1, alpha, beta, opponent(color), ply + 1)
+    board.undo()
 
-1. each live window counts with the severity table (1, 4, 16, 64, 256 for 1–5 stones);
+    # MAX raises alpha, MIN lowers beta; other moves change nothing.
+    if maximizing and score > alpha:
+        alpha = score
+    elif not maximizing and score < beta:
+        beta = score
+    else:
+        continue
+    if ply == 0:
+        self.m_best_move = move
+    # Cut-off: the opponent will never allow this line, skip the remaining moves.
+    if alpha >= beta:
+        self.m_pruned_nodes += len(moves) - i - 1
+        break
+return alpha if maximizing else beta
+```
+
+*Why.* As soon as α ≥ β, the player to move in this node has a reply that the opponent, higher in
+the tree, would never allow, so the remaining moves cannot change the result and are skipped. The
+result is the Minimax value with fewer nodes; its efficiency depends on trying good moves first,
+which the next items provide. The engine counts the expanded nodes (`m_total_nodes`) and the
+*pruned* ones (the siblings skipped at each cut-off, `m_pruned_nodes`), the metrics asked for in
+session 5, and prints them after each search (`info time … nodes … pruned … score …`).
+
+*Verification.* On 20 random positions alpha-beta returned exactly the same move and score as
+the session 1 Minimax (loaded from the `session-1` tag), with **67 % fewer nodes** (13,540 instead
+of 41,400) and a third of the time.
+
+#### 3.3.2 Support: an incremental board
+
+*Why it was needed.* The improved move proposal and evaluation need, for every one of the 924
+six-cell windows of the board, how many black and white stones it contains. Recomputing that at
+every node would dominate the run time in Python.
+
+*Implementation (`board.py`).* The board became a flat list of 361 cells (index = row·19 + col)
+plus precomputed tables: `WINDOWS` (the 924 windows as tuples of cells) and `CELL_WINDOWS` (the at
+most 24 windows through each cell). For each colour the `Board` keeps `counts[color][window]`
+(its stones in each window), `lines[color][k]` (the number of its *live* windows with k stones,
+i.e. windows without opposing stones), and `threats[color]` (the set of its live windows with at
+least four stones, those it can complete in one move). Placing a stone updates only the windows
+through its cell:
+
+```python
+for window in CELL_WINDOWS[cell]:
+    n, m = mine[window], theirs[window]
+    mine[window] = n + 1
+    if m == 0:
+        # Our live window grows from n to n + 1 stones (index 0 is unused).
+        my_lines[n] -= 1
+        my_lines[n + 1] += 1
+        if n + 1 >= THREAT:
+            self.threats[color].add(window)
+            if n + 1 == WIN:
+                self.winner = color
+    elif n == 0:
+        # The opponent's live window now holds our stone: it is dead.
+        their_lines[m] -= 1
+        if m >= THREAT:
+            self.threats[other].discard(window)
+```
+
+`remove()` reverts exactly the same updates, and `play()`/`undo()` apply a whole move and keep a
+history, so the search works on one board without copying it. A window reaching six stones sets
+the winner, which replaced the line scan of session 1.
+
+*Verification.* The refactor changed no result: 27 searches through the protocol gave identical
+moves, scores and node counts. It made each search **6 times faster** (0.102 s → 0.017 s on the
+same positions). Later, 18,647 random play/undo steps were compared with a reference board.
+
+#### 3.3.3 Improved next-moves proposal
+
+*Requirement.* Provide good candidates ranked from best to worst: analyse attack and defence
+threats, consider only cells around stones that are alive (that can still form six), and order
+the moves by the severity of the threats.
+
+*Implementation (`move_generator.rank_cells()`).* Only the empty cells of live, non-empty windows
+are candidates ("around the stones that are alive"). Each such window adds its *severity* to all
+its empty cells, and windows of both colours count, so a cell scores its attack value (our
+windows) and its defence value (the opponent's windows it would block):
+
+```python
+for window, cells in enumerate(WINDOWS):
+    b, w = black[window], white[window]
+    if (b == 0) == (w == 0):
+        continue  # Empty window, or dead because it holds both colours.
+    severity = Defines.SEVERITY[b or w]  # Each extra stone makes the threat 4x more severe.
+    for cell in cells:
+        if not board.cells[cell]:
+            scores[cell] = scores.get(cell, 0) + severity
+```
+
+The severity grows four times with every stone (`SEVERITY = 1, 4, 16, 64, 256` for 1–5 stones),
+so one window with four stones outweighs any reasonable number of windows with one or two. The 10
+best cells are paired, and the pairs are sorted by the sum of their two scores.
+
+*Why.* A cell that lies in no live window cannot help either player to make six, so it is never
+proposed. Counting both colours makes a defensive cell as attractive as an attacking one of the
+same severity. The exponential severity reflects the guide's "priority by the severity of the
+threat".
+
+*Verification.* The positions that defeated the naive proposal (win in one, block a four) were
+solved immediately, and the engine lasted 9–12 turns against Cloudict instead of 8.
+
+#### 3.3.4 Enhanced static evaluation
+
+*Requirement.* Count the live sets weighted by their number of stones and by the number of stones
+the opponent must use to turn them into dead sets.
+
+*Implementation (v2, `evaluation.py` and `Board.blockers()`).* Both aspects are implemented:
+
+1. each live window counts with the severity of its number of stones (`lines[color][k]` from the
+   board);
 2. for the sets that can win next turn (four or five stones), `Board.blockers()` computes the
-   exact number of stones the opponent must place to kill all of them: the size of the minimum
-   set of cells that hits every such window (capped at 3, since three cannot be blocked with
-   one two-stone move). The kill cost is weighted 128, 1024 or 8192 for 1, 2 or 3 stones.
+   exact number of stones the opponent must place to kill all of them: the size of the smallest
+   set of empty cells that hits every threat window (capped at 3, since three cannot be blocked
+   with one two-stone move). It is weighted 128, 1024 or 8192 for 1, 2 or 3 stones.
 
-Smaller sets need no explicit kill cost: an open group lies in many live windows and a blocked
-one in few, so counting every live window already weights a group by how hard it is to kill.
-`blockers()` was checked against a brute-force minimum hitting set on 61,389 positions
-(including 1,932 with two blockers and 300 with three or more). In 8 games against the previous
-version (4 openings, both colours) the new evaluation won 5 and drew 3.
+```python
+def blockers(self, color):
+    """Stones the opponent needs to kill every set `color` can complete next turn (max 3)."""
+    gaps = [{cell for cell in WINDOWS[window] if not self.cells[cell]}
+            for window in self.threats[color]]
+    if not gaps:
+        return 0
+    if set.intersection(*gaps):
+        return 1  # One cell lies in every threat window.
+    for cell in set.union(*gaps):
+        rest = [gap for gap in gaps if cell not in gap]
+        if set.intersection(*rest):
+            return 2  # This cell plus one more cover all the windows.
+    return 3  # A two-stone move cannot stop them all.
+```
+
+The score is Black's weighted sets plus its kill cost, minus White's.
+
+*Why.* `blockers()` is exactly Wu and Huang's number of threats (Definition 1 of [2]). Their
+algorithm counts each line greedily and adds the lines; the minimum hitting set also handles
+windows of different lines that share an empty cell, which a single stone blocks at once. Smaller
+sets need no explicit kill cost: an open group lies in many live windows and a blocked one in few,
+so counting every live window already weights a group by how hard it is to kill. The win scores
+were raised to ±1,000,000 so that no heuristic sum can reach them.
+
+*Verification.* `blockers()` was compared with a brute-force minimum hitting set on 61,389
+positions (1,932 with two blockers, 300 with three or more): no difference. In 8 games against
+the previous version (4 openings, both colours) the new evaluation won 5 and drew 3.
 
 ### 3.4 Session 3: imminent threats and our own evaluation function
 
-**State of the art.** Section 2 summarises the reading of this session. Its key idea, Wu and
-Huang's definition of threats, is exactly what the engine computes with `blockers()`.
+#### 3.4.1 Review of the state of the art
 
-**Detecting imminent threats.** The move proposal handles the three cases of the guide in order:
+Section 2 summarises the reading of this session: the two documents suggested in Moodle
+[2, 13, 14] and their references. It confirmed the design so far and shaped the rest: the number
+of threats (Wu and Huang's Definition 1) is what `blockers()` computes; their live-2/live-3 and
+dead-2/dead-3 threats correspond to our live windows with two or three stones, the `own_2`,
+`own_3`, `opp_2` and `opp_3` features below; the high locality of Connect6 [14] justifies
+proposing only cells of windows around existing stones; and Liu and Lin's defence verified by
+threat-space search [13] is the architecture adopted in session 5.
 
-1. **We can win now:** if we have a live window with four or five stones, the only move
-   proposed fills it (adding any other stone if one is enough).
-2. **The opponent threatens to win next turn:** only moves that block every opponent window
-   with four or more stones are proposed: the pairs of candidate cells that intersect the empty
-   cells of every such window. If no pair can block them all (three or more blockers), the game
-   is lost, and the moves that block the most are proposed.
-3. **Otherwise:** moves are ranked by the strength of the threats they create: first by the
-   number of stones the opponent would need to stop them (`blockers`), then by the number of
-   our windows with four or more stones, then by the cell scores.
+#### 3.4.2 Improving the move proposal by detecting imminent threats
 
-Tactical tests (win now, single-gap win, block a four, block two fours at the board edge) all
-pass, and a winning move is now found by expanding 2 nodes. Against Cloudict the engine lasted
-17–23 turns.
+*Requirement.* Check first for a winning move; otherwise check whether the opponent threatens to
+win next turn and propose the defending moves; otherwise prefer moves that increase our live sets
+of four or more stones, ordered by the strength of their threats.
 
-**Our own evaluation function.** The evaluation became a weighted sum of features, so that its
-weights can be optimised in session 4. It is computed for the **side to move**, because in
-Connect6 the turn is decisive: a player to move with a four on the board simply wins. Two exact
-rules are applied first:
+*Implementation (`move_generator.generate_moves()`).* The three cases, in the guide's order:
 
-- if the side to move has a threat window, it wins with its next move (score just below MAX);
-- if the opponent's threats need three or more blockers, the side to move loses.
+```python
+cells, scores = best_cells(board, limit)
+# 1. We can win now: nothing else is worth exploring.
+if board.threats[color]:
+    return [winning_move(board, color, cells)]
 
-Otherwise the score is Σ wᵢ·fᵢ over seven features:
+# 2. The opponent threatens to win next turn: only moves that block every threat.
+gaps = threat_gaps(board, opponent(color))
+if gaps:
+    candidates = set().union(*gaps, cells)
+    moves = [move for move in combinations(candidates, 2)
+             if all(gap & set(move) for gap in gaps)]
+    # Three or more blockers are needed: the game is lost, block what we can.
+    return rank_moves(board, color, moves or list(combinations(candidates, 2)), scores)
+
+# 3. Pairs of the best cells, moves that create the strongest threats first.
+return rank_moves(board, color, combinations(cells, 2), scores)
+```
+
+1. **Win:** `threats[color]` is non-empty when we have a live window with four or five stones;
+   `winning_move()` fills its empty cells (adding any other empty cell if one stone is enough).
+2. **Defend:** `threat_gaps()` lists the empty cells of every opponent threat window. A move is
+   kept only if it puts a stone in *each* of them; the second stone of a single-threat defence
+   is chosen among the best cells. When no pair can block everything (three or more blockers)
+   the game is lost, and the moves that block most are still proposed so the engine always
+   answers.
+3. **Otherwise:** in session 3 `rank_moves()` played each pair and sorted by `(blockers we create,
+   number of our threat windows, cell scores)`, so moves creating threats that need more
+   stones to stop came first. (Session 4 replaced this key by the static evaluation, which
+   contains the same information; 3.5.3.)
+
+*Why.* A win is never missed and nothing else is searched when one exists; when the opponent
+threatens to win, every move that does not block loses at once, so removing them prunes the tree
+without risk.
+
+*Verification.* Five tactical positions: win now, win with a single gap, block a four, two fours
+against the edge (each needing one blocker), and two open fours (a lost position, correctly
+scored as lost). All passed, a win was found by expanding 2 nodes, and the engine lasted 17–23
+turns against Cloudict.
+
+#### 3.4.3 Our own evaluation function
+
+*Requirement.* Design an evaluation function from several aspects of the game (the number of live
+sets, their size, the stones needed to defend against them) as a weighted sum whose weights can
+be optimised by machine learning.
+
+*Implementation (`evaluation.py`).* The evaluation is computed for the **side to move** and is a
+weighted sum Σ wᵢ·fᵢ of seven features, read directly from the board's counters:
 
 | Feature | Meaning | Hand-tuned weight |
 |---|---|---|
-| own_1, own_2, own_3 | our live sets with 1, 2, 3 stones | 1, 4, 16 |
+| own_1, own_2, own_3 | our live sets with 1, 2, 3 stones (`lines[color][k]`) | 1, 4, 16 |
 | opp_1, opp_2, opp_3 | the opponent's live sets with 1, 2, 3 stones | −1, −4, −16 |
 | opp_blockers | stones we must spend to stop the opponent's threats (1 or 2) | −128 |
 
-Our sets of four or more never appear in a quiet position (they are a win for the side to move),
-and the opponent's appear through `opp_blockers`. The hand-tuned weights were chosen by playing
-five candidate weight vectors against the session 2 engine (6 openings, both colours):
+Two exact rules come first, because in Connect6 the turn is decisive:
+
+```python
+if board.threats[color]:
+    return Defines.MAXINT - 1   # The side to move completes six with its next move.
+if board.blockers(opponent(color)) >= 3:
+    return Defines.MININT + 2   # It cannot block all the opponent's threats with two stones.
+return sum(w * f for w, f in zip(weights, features(board, color)))
+```
+
+*Why.* A player to move with a four simply wins, so the same position is won or lost depending on
+who moves, and a symmetric evaluation would get it wrong. Our sets of four or more never reach the
+weighted sum (they are a win), and the opponent's appear through `opp_blockers`. The weights are
+a parameter of `evaluate()`, so the genetic algorithm of session 4 can play games with any vector.
+
+*Choosing the hand weights.* Five weight vectors played the session 2 engine (12 games each,
+6 openings, both colours):
 
 | Weights (own_1..3, opp_1..3, opp_blockers) | Games | Wins | Losses | Draws |
 |---|---|---|---|---|
@@ -275,10 +642,15 @@ session 4 addresses.
 
 ### 3.5 Session 4: machine learning and search optimisations
 
-#### 3.5.1 Evolving the evaluation weights with a genetic algorithm
+#### 3.5.1 Optimising the weights with a genetic algorithm
 
-Following the guide and Unit 4, the seven weights of the evaluation function were optimised with
-a genetic algorithm (`training/genetic.py`) in which the individuals compete with each other:
+*Requirement.* Optimise the weights of the evaluation function with a machine learning technique
+such as the evolutionary algorithm of the theory: a population initialised with random weights
+around the hand-tuned configuration, whose individuals compete with each other to obtain their
+fitness, evolved over several iterations.
+
+*Implementation (`training/genetic.py`).* A genetic algorithm (Unit 4) whose chromosomes are the
+seven weights of 3.4.3:
 
 | Element | Choice | Reason |
 |---|---|---|
@@ -293,9 +665,25 @@ a genetic algorithm (`training/genetic.py`) in which the individuals compete wit
 | Termination | 25 generations | About 30 minutes on 8 parallel processes. |
 | Validation | The 3 best of the last generation each play the 12 openings with both colours (24 games) against the hand-tuned weights; the best is kept | Fitness inside a generation is relative and noisy. |
 
-The games are played in parallel (`multiprocessing`), and every generation is written to
-`training/results/evolution.csv`.
+Each generation is one pass of the classic loop: evaluate, rank, keep the elite, breed the rest.
 
+```python
+population = [HAND_TUNED] + [scaled(HAND_TUNED, INIT_SIGMA) for _ in range(size - 1)]
+for generation in range(generations):
+    scores = fitness(population, pool)  # Games between individuals, in parallel processes.
+    ranked = sorted(range(size), key=lambda i: scores[i], reverse=True)
+    ...
+    # Next generation: the elite unchanged, the rest bred from tournament winners.
+    elite = [population[i] for i in ranked[:ELITISM]]
+    children = [mutate(crossover(tournament(population, scores),
+                                 tournament(population, scores)))
+                for _ in range(size - ELITISM)]
+    population = elite + children
+```
+
+The games are played with the engine's own `Board` and `SearchEngine(weights)`, in parallel
+(`multiprocessing.Pool`), and every generation is written to `training/results/evolution.csv`
+as soon as it ends.
 
 **Results.** Figure 1 shows the run. The best fitness inside a generation *decreases* (from about
 0.8 to 0.65) while the weights converge. This is not a loss of quality: fitness is measured
@@ -325,128 +713,290 @@ threat is halved (−60 instead of −128): the search answers the threat itself
 penalty was double-counting it. A human would hardly have chosen these values, which is the
 point of learning them.
 
+#### 3.5.2 Answering within the time received: negamax with iterative deepening
 
-#### 3.5.2 Negamax, iterative deepening and the time limit
+*Requirement.* Make sure the answer is obtained before the time received by parameter
+(`depth d`).
 
-The search was rewritten in **negamax** form (Unit 3.2): the evaluation is returned from the point
-of view of the side to move and each level negates its children's values, so one procedure
-serves both colours and the transposition table can store one kind of score.
+*Implementation (`SearchEngine.search()` and `negamax()`).* The search was rewritten in
+**negamax** form (Unit 3.2): the evaluation is returned for the side to move and each level
+negates its children's values, so one procedure serves both colours and the transposition table
+stores a single kind of score. Around it, **iterative deepening** searches depth 1, 2, 3… and
+keeps the result of the last completed iteration:
 
-**Iterative deepening** searches depth 1, 2, 3… until the time runs out, keeping the move of the
-last completed iteration. The time comes from `depth d` (*d* seconds):
+```python
+self.m_deadline = start + time_limit * Defines.TIME_SAFETY if time_limit else None
+best, ranking = None, []
+for depth in range(1, max_depth + 1):
+    self.m_root_scores = []
+    try:
+        score = self.negamax(depth, -INFINITY, INFINITY, color, 0)
+    except SearchTimeout:
+        # Keep the move of the last completed iteration. If not even the first one
+        # finished, play the best root move found so far (or the best-ranked candidate).
+        if best is None:
+            move = self.m_best_move or generate_moves(board, color, self.m_weights)[0]
+            best = (move, self.m_best_score)
+        break
+    best, self.m_depth = (self.m_best_move, score), depth
+    ...
+    # Stop on a forced result, or when the next (much bigger) iteration cannot finish.
+    elapsed = time.perf_counter() - start
+    if abs(score) > WIN_BOUND or (time_limit and elapsed > time_limit * Defines.NEXT_ITERATION):
+        break
+```
 
-- the search stops at **80 %** of the limit (`TIME_SAFETY`), leaving a margin for the protocol;
-- no new iteration starts once **25 %** of the limit is spent (`NEXT_ITERATION`): each iteration
-  costs several times the previous one, so it could not finish;
-- a timeout raises an exception that unwinds the recursion; every `play()` is paired with an
-  `undo()` in a `finally` block, so the board is always restored;
-- the deadline is enforced even in the first iteration: if nothing has finished, the best root
-  move found so far (or the best-ranked candidate) is played;
-- wins are scored `MAX − ply`, so a quicker win is preferred and a slower loss chosen when lost.
+Every node calls `tick()`, which raises `SearchTimeout` once the deadline has passed. The
+exception unwinds the recursion, and every `play()` is paired with an `undo()` in a `finally`
+block, so the board is always restored. The time shares are constants of `defines.py`:
 
-At a fixed depth, negamax returned the same move as the session 3 Minimax on 40 of 40 positions.
-A stress test on 24 positions with limits of 0.2, 0.5, 1 and 2 s, with every search option,
-never exceeded the limit: the slowest answer used **82 %** of it.
+| Constant | Value | Meaning |
+|---|---|---|
+| `TIME_SAFETY` | 0.75 | the alpha-beta search stops at 75 % of the limit |
+| `NEXT_ITERATION` | 0.25 | no new iteration once 25 % is spent (the next one costs several times more) |
+| `ATTACK_TIME`, `SAFETY_TIME` | 0.15, 0.90 | budgets of the threat-space search before and after (3.6) |
+
+Wins are scored `MAX − ply` (`SearchEngine.evaluate()` subtracts the distance), so a quicker win
+is preferred and a lost position is defended as long as possible.
+
+*Why.* Iterative deepening is the standard way to turn a depth-limited search into an anytime
+one: whenever time runs out a complete answer exists, and each iteration orders the next
+(through the transposition table, 3.5.4). Stopping at 75–90 % of the limit leaves a margin for
+the protocol and for slower machines. A first version let the first iteration finish whatever
+it cost; one move then took 4.7 s at a 2 s limit, so the deadline now applies from the start.
+
+*Verification.* At a fixed depth negamax returned the same move as the session 3 Minimax on 40 of
+40 positions. A stress test on 24 positions (the 12 test positions of Section 4.2 and 12 random
+ones) with limits of 0.2, 0.3, 0.5, 1, 2 and 4 s, with every option, never exceeded the limit:
+the slowest answer used **82 %** of it. In all the tournament games, the longest move took 3.3 s
+of the 4 s allowed.
 
 #### 3.5.3 Forward pruning: N-best selective search
 
-Unit 3.3 describes N-best selective search: rank the candidate moves with the static evaluation
-and search only the N best. The move proposal now ranks every candidate pair by the evaluation of
-the position it leads to (from the mover's point of view), which already contains the threat
-logic of session 3 (a move whose threats cannot be blocked evaluates as a win; a double threat
-is worth the opponent's `opp_blockers` penalty). Below the root, only the **10 best** moves are
-searched; the root keeps all candidates (12 cells, 66 pairs), so a good move is never discarded
-there. Forced defences are never pruned: when the side to move must answer a threat, every
-blocking move is searched, because cutting one could hide the refutation of an attack and make a
-false win look forced.
+*Requirement (optional optimisation).* Discard many proposed moves with heuristics and search only
+a subset.
 
-With forward pruning the search reached depth 5–6 instead of 4 in the same time, and won a match
-of 8 games (2 s per move) against the version without it **5–2, with 1 draw**. Keeping the forced
-defences unpruned scored 2 wins and 2 draws, without losses, against a version that pruned them.
+*Implementation (`move_generator.rank_moves()`, `negamax()`).* Unit 3.3 describes N-best selective
+search: rank the moves with the static evaluation and search only the N best. Every candidate
+pair is played and the position it leads to is evaluated from the mover's point of view:
 
-#### 3.5.4 Transposition table with Zobrist hashing
+```python
+def value(move):
+    """Evaluation after the move (for the mover), then its cell scores."""
+    board.play(move, color)
+    score = -evaluate(board, opponent(color), weights)  # Our view of the opponent's position.
+    board.undo()
+    return score, sum(scores.get(cell, 0) for cell in move)
 
-Each (colour, cell) pair has a random 64-bit Zobrist key; the board keeps the XOR of the keys of
-its stones, updated with one XOR per stone, and a key for the side to move is added. The same
-stones placed in another order give the same hash, which is exactly what a transposition is:
-in Connect6 the two stones of a move, and the moves of a sequence, can come in any order.
+return sorted(moves, key=value, reverse=True)
+```
 
-The table maps a hash to the depth searched, the score and whether it is exact, a lower bound
-(a cut-off) or an upper bound (all moves failed low), and the best move. This also covers what
-the guide calls historical heuristics ("stores the valuations and valuation depth of a given
-position"). An entry searched at least as deep settles the node when its bound allows; otherwise
-its best move is searched first, so each iteration of the deepening starts with the best line of
-the previous one. Win scores are stored relative to the stored position and converted back, so a
-transposition found at another ply keeps the right distance to the win. The table is kept
-between turns (the next turn searches many of the same positions) and is bounded to 200,000
-entries to control the memory; when full it is cleared.
+In `negamax()`, below the root only the **10 best** moves are searched (`BRANCHING`), while the
+root keeps all candidates (12 cells, 66 pairs):
 
-On 12 positions at depth 4 the table returned the same scores with 6 % fewer nodes. The gain inside
-one search is small because forward pruning keeps only 10 moves per node, so few transposed
-positions are reached; the main benefit is ordering and reuse across iterations and turns.
+```python
+moves = generate_moves(board, color, self.m_weights)
+# Forward pruning, except at the root and for forced defences: cutting a defence could
+# hide the refutation of an attack and make a false win look forced.
+if ply and not board.threats[opponent(color)]:
+    moves = moves[:self.m_branching]
+```
+
+*Why.* The evaluation already contains the threat logic of session 3: a move whose threats
+cannot be blocked evaluates as a win, and a double threat costs the opponent its `opp_blockers`
+penalty, so the ranking keeps "threats first". Keeping every root move means a good move is
+never discarded where it matters most. Forced defences are never pruned because they are few and
+each one may be the only refutation of an attack.
+
+*Verification.* With forward pruning the search reached depth 5–6 instead of 4 in the same time
+and won a match of 8 games (2 s per move) against the version without it **5–2, with 1 draw**.
+Keeping the forced defences unpruned scored 2 wins and 2 draws, without losses, against a version
+that pruned them. The effect of N is measured in Section 4.5.
+
+#### 3.5.4 Transposition table with Zobrist hashing (historical heuristics)
+
+*Requirement (optional optimisations).* Store the valuation of a position and the depth at which
+it was obtained ("historical heuristics" in the guide), and reuse it when the same position is
+reached by another move order (transposition tables).
+
+*Implementation (`board.py`, `negamax()`).* Each (colour, cell) pair has a random 64-bit
+**Zobrist** key, drawn once with a fixed seed. The board's `hash` is the XOR of the keys of its
+stones and is updated with one XOR in `put()` and `remove()`; a key for the side to move is added
+when probing. The table maps the hash to `(depth, kind, score, best move)`, where `kind` says
+whether the score is exact, a lower bound (a cut-off happened) or an upper bound (all moves
+failed low):
+
+```python
+# Transposition table: a result searched at least as deep settles the node.
+key = board.hash ^ TURN_KEYS[color]
+entry = self.m_table.get(key) if self.m_table is not None else None
+table_move = None
+if entry:
+    stored_depth, kind, stored, table_move = entry
+    score = from_table(stored, ply)
+    if ply and stored_depth >= depth and (kind == EXACT or (kind == LOWER and score >= beta)
+                                          or (kind == UPPER and score <= alpha)):
+        return score
+...
+if table_move:
+    # The best move found earlier for this position is searched first.
+    moves = [table_move] + [move for move in moves if move != table_move]
+...
+kind = UPPER if best <= original_alpha else LOWER if best >= beta else EXACT
+self.m_table[key] = (depth, kind, to_table(best, ply), best_move)
+```
+
+*Why.* The same stones placed in another order give the same hash, and transpositions are common
+in Connect6 (the two stones of a move, and the moves of a sequence, can come in any order). An
+entry settles the node only when its bound allows it; otherwise its best move is tried first, so
+each iteration of the deepening starts with the best line of the previous one. Win scores are
+stored relative to the stored position (`to_table`/`from_table`), so a transposition found at
+another ply keeps the right distance to the win. The table is kept between turns (the next turn
+searches many of the same positions) and bounded to 200,000 entries (`TABLE_SIZE`), cleared when
+full, to control the memory.
+
+*Verification.* Hashes were checked over 18,647 random play/undo steps (restored exactly on undo,
+equal for the same stones in another order). On 12 positions at depth 4 the table returned the
+same scores with 6 % fewer nodes. The gain inside one search is small because forward pruning
+keeps only 10 moves per node, so few transposed positions are reached; Section 4.5 measures it.
 
 #### 3.5.5 Quiescence search (implemented, disabled by experiment)
 
-To reduce the horizon effect, the search was extended beyond the depth limit while the side to
-move must still answer a threat: such a position is not quiet, so only the forced defences are
-searched, for up to 2 or 4 extra plies, before evaluating. The experiments rejected it: with 4
-extra plies it **lost all 8 games** against the same engine without it (and 6 of 6 with 2 plies),
-and on the test positions it made 1–2 wrong decisions at 0.5–1 s where the plain search made
-none. The reason is the cost of Python nodes: the extension uses time that the plain search
-spends on one more ply, and the evaluation already scores a pending threat through
-`opp_blockers`, so horizon positions are not blind to threats. The extension remains in the code
-(`QUIESCENCE`, default 0) and is measured in Section 4.5.
+*Requirement (optional optimisation).* Deal with the horizon effect by expanding critical moves.
+
+*Implementation (`negamax()`).* A position where the side to move must still answer a threat is
+not quiet, so at the depth limit the search continues, with the forced defences only, for up to
+`QUIESCENCE` extra plies:
+
+```python
+# Quiescence search: a position where we must still answer a threat is not quiet, so the
+# forced defences are searched up to m_quiescence plies beyond the depth limit.
+if depth <= 0 and (depth <= -self.m_quiescence or not board.threats[opponent(color)]):
+    return self.evaluate(color, ply)
+```
+
+*Why it is disabled.* The experiments rejected it: with 4 extra plies it **lost all 8 games**
+against the same engine without it (and all 6 played with 2 plies), and on the test positions it
+made 1–2 wrong decisions at 0.5–1 s where the plain search made none. In Python the extension
+uses the time that the plain search spends on one more ply, while the evaluation already scores a
+pending threat through `opp_blockers`, so the horizon positions are not blind to threats. The
+extension stays in the code (`QUIESCENCE`, default 0) and is measured in Section 4.5.
 
 #### 3.5.6 Opening book with board symmetries
 
-The first moves are the most expensive to search (few stones, so many candidate cells of similar
-value) and the search is shallow there. `training/build_book.py` builds a book automatically,
-with a 30 s search per position: white's reply to black's centre stone, and black's second move
-after every white reply with both stones within two cells of the centre.
+*Requirement (optional optimisation).* An opening book of good first moves, generated from expert
+information or automatically by the engine; the guide also suggests using the symmetries of the
+board.
 
-A position and its 8 symmetric images (4 rotations around the centre and their mirror images)
-are the same position, so the book stores each class once, under its *canonical* form: the
-smallest of the 8 transformed keys. The 277 positions reduce to **45** searches. At run time,
-`opening_book.book_move()` canonicalises the current position, looks it up and maps the stored
-move back through the inverse symmetry; this was checked for all 8 orientations. A book move is
-played instantly, which also leaves the GUI's clock untouched in the opening.
+*Implementation (`training/build_book.py`, `opening_book.py`).* The book was built automatically,
+with a 30 s search per position, for white's reply to black's centre stone and black's second
+move after every white reply with both stones within two cells of the centre. These are the
+replies that matter: Wu and Huang's Connect(6, 2, 3) result shows that white should not answer
+black's first stone far away [2]. A position and its 8 symmetric images (the 4 rotations around
+the centre and their mirror images) are the same position, so the book stores each class once,
+under its *canonical* key: the smallest of the 8 transformed keys (`'black stones|white stones'`).
+The 277 positions reduce to **45** searches. At run time:
+
+```python
+def book_move(board):
+    """The book move for this position in the board's own orientation, or None."""
+    if board.stones > Defines.BOOK_STONES:
+        return None
+    key, symmetry = canonical(board)
+    if key not in BOOK:
+        return None
+    move = tuple(INVERSES[symmetry][cell] for cell in msg2move(BOOK[key]))
+    return move if all(not board.cells[cell] for cell in move) else None
+```
+
+`canonical()` returns the key and the symmetry that produced it, and the stored move is mapped
+back through the inverse of that symmetry. `GameEngine.search_a_move()` asks the book first and
+searches only when the position is not in it.
+
+*Why.* The opening is where the search is weakest (few stones, so many candidates of similar
+value) and a book move is instant. The symmetries divide the work and the size of the book by six.
+
+*Verification.* For a fake book entry, the lookup returned the correctly transformed move in all
+8 orientations; positions outside the book fall back to the search.
 
 #### 3.5.7 Robustness of the interface
 
 The statement warns that an engine that does not meet the interface is considered not working.
-Every command is therefore executed inside an exception handler: a malformed command (`black`
-without cells, a cell outside A–S, a stone on an occupied cell) is logged and ignored, the
-engine keeps running and still answers correctly from the next valid history. Moves are checked
-before being placed, so a bad command can never corrupt the board statistics.
+Every command is therefore executed inside an exception handler, and moves are validated before
+they are placed:
 
+```python
+try:
+    handler(command, arg.strip())
+except Exception as error:  # A malformed command must never stop the engine.
+    log_to_file(f"error in '{msg}': {error!r}")
+```
+
+A malformed command (`black` without cells, a cell outside A–S, a stone on an occupied cell) is
+logged and ignored, so it can neither stop the engine nor corrupt the board statistics; the
+engine keeps answering correctly from the next valid history.
 
 ### 3.6 Session 5: threat-space search, found through testing
 
-The test battery of Section 4.2 showed one failure of v4: in "defend in 2 (black)" it found the
-right first defence, but two turns later it allowed Cloudict a double four that needed three
-blockers. Replaying the game showed that the losing reply was beyond the depth reached in the
-available time (3 plies), while 192 of the 1,128 candidate moves would have been safe. The
-remedy is the technique of the state of the art (Section 2.2): a **threat-space search**
-(`engine/threat_search.py`), which follows only moves that create threats. Because every threat
-forces the opponent to block it, the tree is very narrow and wins far beyond the full-width
-horizon can be proved. The search is exact for wins within three turns: a defending stone only
-matters where it blocks a threat or a future four, i.e. in a window holding at least two of the
-attacker's stones, so those cells (or a stone elsewhere, which changes nothing) are the only
-defences to try. The engine uses it twice per turn, within the same time limit:
+*Origin.* The test battery of Section 4.2 showed one failure of v4: in "defend in 2 (black)" it
+found the right first defence, but two turns later it allowed Cloudict a double four that needed
+three blockers. Replaying the game showed that the losing reply was beyond the depth reached in
+the available time (3 plies), while 192 of the 1,128 candidate moves would have been safe.
+
+*Implementation (`threat_search.py`).* The remedy is the technique of the state of the art
+(Sections 2.2 and 2.5): a **threat-space search**, which follows only moves that create threats.
+Every threat forces the opponent to block it, so the tree is very narrow and wins far beyond the
+full-width horizon can be proved:
+
+```python
+for move in combinations(attack_cells(board, color), 2):
+    board.play(move, color)
+    try:
+        blockers = board.blockers(color)
+        # Three blockers cannot be placed with two stones; with fewer, every defence must lose.
+        if blockers >= 3 or (blockers and turns > 2
+                             and all_defences_lose(board, color, turns - 1, tick)):
+            return move
+    finally:
+        board.undo()
+```
+
+`attack_cells()` returns the empty cells of the attacker's live windows with at least two stones,
+the only cells that can make fours. `all_defences_lose()` tries every defence that blocks all
+the threats and calls the search again, one turn shorter. The search is exact for wins within
+three turns: a defending stone only matters where it blocks a threat or a future four, i.e. in a
+window holding at least two of the attacker's stones, so those cells (or one stone elsewhere,
+which changes nothing) are the only defences to try. `SearchEngine.search()` uses it twice per
+turn, within the same time limit:
 
 1. **Attack (before the alpha-beta search, 15 % of the time):** if a forced win within 2, then 3
    turns exists, it is played at once. The shorter horizon is tried first, so the engine always
-   takes the quickest win: a first version that searched 3 turns directly sometimes chose a
+   takes the quickest win; a first version that searched 3 turns directly sometimes chose a
    3-turn win when a 2-turn win existed.
 2. **Safety (after the search, up to 90 % of the time):** if the chosen move lets the opponent win
-   by threats within 2 turns, the next root moves (in the order of the last iteration) are tried
-   until a safe one is found; checking one move takes about 16 ms.
+   by threats within 2 turns, the next root moves (in the order of the last iteration) are
+   tried until a safe one is found; checking one move takes about 16 ms:
 
-The same module now also certifies the test positions of the experiments, so the engine and the
-experiments share a single implementation. The final engine solves all 12 positions of the
-battery, never exceeded the time limit in the stress test (slowest move: 80 % of the limit), and
-beat v4 in the final tournament (Section 4.4).
+```python
+for move in moves:
+    board.play(move, color)
+    try:
+        lost = wins_in(board, opponent(color), 2, self.tick)
+    finally:
+        board.undo()
+    if not lost:
+        return move
+```
 
+*Why.* This is the architecture of Liu and Lin's Kagami [13] (Section 2.5), with two differences.
+Our verifier enumerates the exact defences instead of a conservative defence, so it never misses
+a win within its horizon, and the winning attack is searched *before* the main search, the order
+they describe as better but did not implement. The same module also certifies the test positions
+of the experiments, so the engine and the experiments share a single implementation.
+
+*Verification.* The final engine solves all 12 positions of the battery, never exceeded the time
+limit in the stress test (slowest move: 80 % of the limit), and beat v4 6–1 (1 draw) in the final
+tournament (Section 4.4).
 
 ### 3.7 CPU, memory and code quality
 
@@ -761,6 +1311,10 @@ algorithm, as Unit 4 suggests.
     adversarial search) and Unit 4 (genetic algorithms); the Practice 1 statement and guide; the
     template engine and GUI: <https://github.com/felixem/Connect6Engine>,
     <https://github.com/felixem/Connect6GUI>
+13. Y-C. Liu and S-S. Lin, "A Defensive Strategy Combined with Threat-Space Search in Connect6",
+    National Taiwan Normal University, 2009 (document suggested in Moodle).
+14. Y-C. Liu, *A Defensive Strategy Combined with Threat-Space Search for Connect6*, Master's
+    thesis, National Taiwan Normal University, 2009 (document suggested in Moodle).
 
 ## Appendix: running the engine
 
